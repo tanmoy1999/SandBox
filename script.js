@@ -35,6 +35,8 @@ fetch('https://tanmoy1999.github.io/StockChangeCapture/JSONOutput/May2023.json')
                     labels.push(key);
                     values.push(stockData[key]);
                 }
+                labels.reverse()
+                values.reverse()
 
                 // Create a canvas element for the bar graph
                 const canvas = document.createElement('canvas');
