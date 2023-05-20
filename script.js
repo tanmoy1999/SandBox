@@ -15,13 +15,37 @@ fetch('data.json')
             // Get the data for the current stock
             const stockData = data[stock][0];
 
-            // Iterate over each key-value pair in the stock data
-            for (const key in stockData) {
-                // Create a new paragraph element for each key-value pair
-                const paragraph = document.createElement('p');
-                paragraph.textContent = `${key}: ${stockData[key]}`;
-                dataContainer.appendChild(paragraph);
-            }
+            // Get the keys and values from the stock data
+            const dates = Object.keys(stockData);
+            const values = Object.values(stockData);
+
+            // Create a canvas element for the chart
+            const canvas = document.createElement('canvas');
+            dataContainer.appendChild(canvas);
+
+            // Create a line chart
+            const ctx = canvas.getContext('2d');
+            new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: dates,
+                    datasets: [{
+                        label: stock,
+                        data: values,
+                        backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                        borderColor: 'rgba(75, 192, 192, 1)',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        y: {
+                            beginAtZero: false
+                        }
+                    }
+                }
+            });
         }
     })
     .catch(error => console.error(error));
