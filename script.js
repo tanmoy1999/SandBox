@@ -15,33 +15,36 @@ fetch('data.json')
             // Get the data for the current stock
             const stockData = data[stock][0];
 
-            // Get the keys and values from the stock data
-            const dates = Object.keys(stockData);
-            const values = Object.values(stockData);
+            // Create an array to hold labels and data for the bar graph
+            const labels = [];
+            const values = [];
 
-            // Create a canvas element for the chart
+            // Iterate over each key-value pair in the stock data
+            for (const key in stockData) {
+                labels.push(key);
+                values.push(stockData[key]);
+            }
+
+            // Create a canvas element for the bar graph
             const canvas = document.createElement('canvas');
             dataContainer.appendChild(canvas);
 
-            // Create a line chart
-            const ctx = canvas.getContext('2d');
-            new Chart(ctx, {
-                type: 'line',
+            // Create the bar graph using Chart.js
+            new Chart(canvas.getContext('2d'), {
+                type: 'bar',
                 data: {
-                    labels: dates,
+                    labels: labels,
                     datasets: [{
-                        label: stock,
+                        label: 'Stock Data',
                         data: values,
-                        backgroundColor: 'rgba(75, 192, 192, 0.2)',
-                        borderColor: 'rgba(75, 192, 192, 1)',
-                        borderWidth: 1
+                        backgroundColor: 'rgba(75, 192, 192, 0.6)'
                     }]
                 },
                 options: {
                     responsive: true,
                     scales: {
                         y: {
-                            beginAtZero: false
+                            beginAtZero: true
                         }
                     }
                 }
