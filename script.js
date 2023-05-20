@@ -9,6 +9,9 @@ fetch('data.json')
         const searchInput = document.getElementById('search-input');
         const searchButton = document.getElementById('search-button');
 
+        // Get the stock list datalist element
+        const stockList = document.getElementById('stock-list');
+
         // Function to display data for a specific stock
         function displayStock(stock) {
             // Clear the data container
@@ -65,13 +68,48 @@ fetch('data.json')
             }
         }
 
+        // Function to update the stock list for autocomplete
+        function updateStockList() {
+            // Clear the stock list
+            stockList.innerHTML = '';
+
+            // Get the keys of the stocks
+            const stockKeys = Object.keys(data);
+
+            // Create option elements for each stock
+            stockKeys.forEach(stock => {
+                const option = document.createElement('option');
+                option.value = stock;
+                stockList.appendChild(option);
+            });
+        }
+
         // Add event listener to the search button
         searchButton.addEventListener('click', () => {
             const stock = searchInput.value.trim();
             displayStock(stock);
         });
 
+        // Add event listener to the search input for autocomplete
+        searchInput.addEventListener('input', () => {
+            const input = searchInput.value.trim().toLowerCase();
+
+            // Filter the stock list based on the input value
+            const filteredStocks = Object.keys(data).filter(stock => stock.toLowerCase().includes(input));
+
+            // Update the stock list options
+            stockList.innerHTML = '';
+            filteredStocks.forEach(stock => {
+                const option = document.createElement('option');
+                option.value = stock;
+                stockList.appendChild(option);
+            });
+        });
+
         // Display the initial data
         displayStock('20MICRONS');
+
+        // Update the stock list
+        updateStockList();
     })
     .catch(error => console.error(error));
