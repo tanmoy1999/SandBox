@@ -11,3 +11,8 @@
 #search-button {
     padding: 5px 10px;
 }
+
+#data-container canvas {
+    max-width: 100%;
+    height: auto;
+}
