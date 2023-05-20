@@ -4,20 +4,29 @@ fetch('data.json')
     .then(data => {
         // Get the data container element
         const dataContainer = document.getElementById('data-container');
-        const itemsPerPage = 5; // Set the number of items to display per page
-        let currentPage = 1; // Initialize the current page
 
-        // Function to display the data for the current page
-        function displayData() {
+        // Define the number of items per page
+        const itemsPerPage = 3;
+
+        // Calculate the total number of pages
+        const totalPages = Math.ceil(Object.keys(data).length / itemsPerPage);
+
+        // Function to display data for a specific page
+        function displayPage(page) {
             // Clear the data container
             dataContainer.innerHTML = '';
 
-            // Calculate the start and end index of the items to display
-            const startIndex = (currentPage - 1) * itemsPerPage;
+            // Calculate the starting and ending indices of the data for the current page
+            const startIndex = (page - 1) * itemsPerPage;
             const endIndex = startIndex + itemsPerPage;
 
-            // Iterate over each key-value pair in the JSON data
-            for (const stock in data) {
+            // Get the keys of the stocks
+            const stockKeys = Object.keys(data);
+
+            // Iterate over the stocks for the current page
+            for (let i = startIndex; i < endIndex && i < stockKeys.length; i++) {
+                const stock = stockKeys[i];
+
                 // Create a new heading element for the stock
                 const stockHeading = document.createElement('h2');
                 stockHeading.textContent = stock;
@@ -60,46 +69,39 @@ fetch('data.json')
                         }
                     }
                 });
-
-                // Break the loop if the end index is reached
-                if (endIndex && endIndex <= labels.length) {
-                    break;
-                }
             }
         }
 
-        // Function to go to the previous page
-        function goToPreviousPage() {
-            if (currentPage > 1) {
-                currentPage--;
-                displayData();
+        // Function to create pagination links
+        function createPaginationLinks() {
+            // Create a pagination container
+            const paginationContainer = document.createElement('div');
+            paginationContainer.classList.add('pagination');
+
+            // Iterate over the total number of pages
+            for (let i = 1; i <= totalPages; i++) {
+                // Create a pagination link
+                const paginationLink = document.createElement('a');
+                paginationLink.href = '#';
+                paginationLink.textContent = i;
+
+                // Add an event listener to the pagination link
+                paginationLink.addEventListener('click', () => {
+                    displayPage(i);
+                });
+
+                // Append the pagination link to the container
+                paginationContainer.appendChild(paginationLink);
             }
+
+            // Append the pagination container to the data container
+            dataContainer.appendChild(paginationContainer);
         }
 
-        // Function to go to the next page
-        function goToNextPage() {
-            const totalItems = Object.keys(data).length;
-            const totalPages = Math.ceil(totalItems / itemsPerPage);
-            if (currentPage < totalPages) {
-                currentPage++;
-                displayData();
-            }
-        }
+        // Display the first page initially
+        displayPage(1);
 
-        // Create previous and next buttons for pagination
-        const previousButton = document.createElement('button');
-        previousButton.textContent = 'Previous';
-        previousButton.addEventListener('click', goToPreviousPage);
-
-        const nextButton = document.createElement('button');
-        nextButton.textContent = 'Next';
-        nextButton.addEventListener('click', goToNextPage);
-
-        // Append the buttons to the data container
-        dataContainer.appendChild(previousButton);
-        dataContainer.appendChild(nextButton);
-
-        // Display the initial data
-        displayData();
+        // Create the pagination links
+        createPaginationLinks();
     })
     .catch(error => console.error(error));
