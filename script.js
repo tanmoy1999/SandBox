@@ -1,29 +1,27 @@
 // Fetch the JSON data
 fetch('data.json')
-  .then(response => response.json())
-  .then(data => {
-    // Get the table body element
-    const tableBody = document.querySelector('#data-table tbody');
+    .then(response => response.json())
+    .then(data => {
+        // Get the data container element
+        const dataContainer = document.getElementById('data-container');
 
-    // Loop through the data and create table rows
-    data.forEach(item => {
-      // Create a new row
-      const row = document.createElement('tr');
+        // Iterate over each key-value pair in the JSON data
+        for (const stock in data) {
+            // Create a new heading element for the stock
+            const stockHeading = document.createElement('h2');
+            stockHeading.textContent = stock;
+            dataContainer.appendChild(stockHeading);
 
-      // Create and append the name cell
-      const nameCell = document.createElement('td');
-      nameCell.textContent = item.name;
-      row.appendChild(nameCell);
+            // Get the data for the current stock
+            const stockData = data[stock][0];
 
-      // Create and append the email cell
-      const emailCell = document.createElement('td');
-      emailCell.textContent = item.email;
-      row.appendChild(emailCell);
-
-      // Append the row to the table body
-      tableBody.appendChild(row);
-    });
-  })
-  .catch(error => {
-    console.log('Error:', error);
-  });
+            // Iterate over each key-value pair in the stock data
+            for (const key in stockData) {
+                // Create a new paragraph element for each key-value pair
+                const paragraph = document.createElement('p');
+                paragraph.textContent = `${key}: ${stockData[key]}`;
+                dataContainer.appendChild(paragraph);
+            }
+        }
+    })
+    .catch(error => console.error(error));
