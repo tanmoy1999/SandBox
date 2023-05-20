@@ -126,5 +126,7 @@ fetch('https://tanmoy1999.github.io/StockChangeCapture/JSONOutput/May2023.json')
 // Top News https://news.google.com/rss/search?q=NSE:%20TCS&hl=en-IN&gl=IN&ceid=IN:en  -- 20/05
 // Current price close price volume diff -- 20/05
 // Graph for closing price
-// 
+// MF Data
 // ------------------------------------------------------------------
+
+// Basic thing is data will be extracted by Python and exported as JSON and these json data will be used by front end JS html
