@@ -1,21 +1,13 @@
-body {
-    font-family: Arial, sans-serif;
-    margin: 20px;
+/* Add styling for the search container */
+#search-container {
+    margin-bottom: 20px;
 }
 
-h1 {
-    text-align: center;
+#search-input {
+    padding: 5px;
+    width: 200px;
 }
 
-#data-container {
-    margin-top: 20px;
-}
-
-h2 {
-    font-size: 18px;
-    margin-bottom: 5px;
-}
-
-p {
-    margin: 0;
+#search-button {
+    padding: 5px 10px;
 }
