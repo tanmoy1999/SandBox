@@ -8,12 +8,14 @@ fetch('https://tanmoy1999.github.io/StockChangeCapture/JSONOutput/May2023.json')
         // Get the search input and search button elements
         const searchInput = document.getElementById('search-input');
         const searchButton = document.getElementById('search-button');
+        const graphtype1 = document.getElementById('graph-type');
+        const graphtype = graphtype1.value;
 
         // Get the stock list datalist element
         const stockList = document.getElementById('stock-list');
 
         // Function to display data for a specific stock
-        function displayStock(stock) {
+        function displayStock(stock,graphtype) {
             // Clear the data container
             dataContainer.innerHTML = '';
 
@@ -37,6 +39,7 @@ fetch('https://tanmoy1999.github.io/StockChangeCapture/JSONOutput/May2023.json')
                 }
                 labels.reverse()
                 values.reverse()
+                console.log(values)
 
                 // Create a canvas element for the bar graph
                 const canvas = document.createElement('canvas');
@@ -44,7 +47,7 @@ fetch('https://tanmoy1999.github.io/StockChangeCapture/JSONOutput/May2023.json')
 
                 // Create the bar graph using Chart.js
                 new Chart(canvas.getContext('2d'), {
-                    type: 'bar',
+                    type: graphtype,
                     data: {
                         labels: labels,
                         datasets: [{
@@ -89,7 +92,9 @@ fetch('https://tanmoy1999.github.io/StockChangeCapture/JSONOutput/May2023.json')
         // Add event listener to the search button
         searchButton.addEventListener('click', () => {
             const stock = searchInput.value.trim();
-            displayStock(stock);
+            const graphtype = graphtype1.value;
+            console.log(graphtype)
+            displayStock(stock,graphtype);
         });
 
         // Add event listener to the search input for autocomplete
@@ -109,9 +114,17 @@ fetch('https://tanmoy1999.github.io/StockChangeCapture/JSONOutput/May2023.json')
         });
 
         // Display the initial data
-        displayStock('20MICRONS');
+        displayStock('TCS','bar');
 
         // Update the stock list
         updateStockList();
     })
     .catch(error => console.error(error));
+
+// --------------------UPCOMING RELEASE PLAN-------------------------
+// 
+// Top News https://news.google.com/rss/search?q=NSE:%20TCS&hl=en-IN&gl=IN&ceid=IN:en  -- 20/05
+// Current price close price volume diff -- 20/05
+// Graph for closing price
+// 
+// ------------------------------------------------------------------

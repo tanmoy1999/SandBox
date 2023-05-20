@@ -8,11 +8,36 @@
     width: 200px;
 }
 
+#graph-type {
+    padding: 5px;
+    width: 200px;
+}
+
 #search-button {
     padding: 5px 10px;
 }
 
-#data-container canvas {
-    max-width: 100%;
+/* #data-container {
+    width: 50%;
+    height: 50%;
+} */
+#data-container {
+    max-width: 70%;
     height: auto;
+    margin: 0 auto;
+    /* padding: 10px; */
+    box-sizing: border-box;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    #data-container {
+        max-width: 90%;
+    }
+}
+
+@media (max-width: 480px) {
+    #data-container {
+        max-width: 100%;
+    }
 }
