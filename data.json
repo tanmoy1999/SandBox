@@ -1,14 +1,11 @@
 [
     {
-        "name": "John",
-        "age": 25
+      "name": "John Doe",
+      "email": "johndoe@example.com"
     },
     {
-        "name": "Jane",
-        "age": 30
-    },
-    {
-        "name": "Bob",
-        "age": 35
+      "name": "Jane Smith",
+      "email": "janesmith@example.com"
     }
-]
+  ]
+  

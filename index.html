@@ -1,11 +1,35 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>JSON Data Display</title>
-    <script src="script.js"></script>
+  <title>Display JSON Data</title>
+  <style>
+    /* CSS styles for the table */
+    table {
+      border-collapse: collapse;
+      width: 100%;
+    }
+
+    th, td {
+      padding: 8px;
+      text-align: left;
+      border-bottom: 1px solid #ddd;
+    }
+  </style>
 </head>
 <body>
-    <h1>JSON Data Display</h1>
-    <div id="data-container"></div>
+  <h1>JSON Data</h1>
+  <table id="data-table">
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Email</th>
+      </tr>
+    </thead>
+    <tbody>
+      <!-- Data will be dynamically added here -->
+    </tbody>
+  </table>
+
+  <script src="script.js"></script>
 </body>
 </html>

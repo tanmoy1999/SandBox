@@ -1,28 +1,29 @@
-window.onload = function() {
-    // Fetch JSON data
-    fetch('data.json')
-        .then(function(response) {
-            return response.json();
-        })
-        .then(function(data) {
-            // Process and display JSON data
-            displayData(data);
-        })
-        .catch(function(error) {
-            console.log('Error:', error);
-        });
-};
+// Fetch the JSON data
+fetch('data.json')
+  .then(response => response.json())
+  .then(data => {
+    // Get the table body element
+    const tableBody = document.querySelector('#data-table tbody');
 
-function displayData(data) {
-    var dataContainer = document.getElementById('data-container');
+    // Loop through the data and create table rows
+    data.forEach(item => {
+      // Create a new row
+      const row = document.createElement('tr');
 
-    // Iterate over each object in the JSON data
-    data.forEach(function(item) {
-        // Create a new paragraph element to display each item's data
-        var paragraph = document.createElement('p');
-        paragraph.textContent = 'Name: ' + item.name + ', Age: ' + item.age;
+      // Create and append the name cell
+      const nameCell = document.createElement('td');
+      nameCell.textContent = item.name;
+      row.appendChild(nameCell);
 
-        // Append the paragraph to the data container
-        dataContainer.appendChild(paragraph);
+      // Create and append the email cell
+      const emailCell = document.createElement('td');
+      emailCell.textContent = item.email;
+      row.appendChild(emailCell);
+
+      // Append the row to the table body
+      tableBody.appendChild(row);
     });
-}
+  })
+  .catch(error => {
+    console.log('Error:', error);
+  });
