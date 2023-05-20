@@ -3,17 +3,16 @@
     margin-bottom: 20px;
 }
 
-#search-container input {
+#search-input {
     padding: 5px;
-    margin-right: 10px;
+    width: 200px;
 }
 
-#compare-button {
+#search-button {
     padding: 5px 10px;
 }
 
-/* Add styling for the chart container */
-#chart-container {
-    max-width: 800px;
-    margin: 0 auto;
+#data-container canvas {
+    max-width: 100%;
+    height: auto;
 }

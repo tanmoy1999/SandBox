@@ -1,65 +1,115 @@
-// Fetch the JSON data from the Git repository URL
+// Fetch the JSON data
 fetch('https://tanmoy1999.github.io/StockChangeCapture/JSONOutput/May2023.json')
     .then(response => response.json())
     .then(data => {
-        // Get the search input and compare button elements
-        const stock1Input = document.getElementById('stock1-input');
-        const stock2Input = document.getElementById('stock2-input');
-        const compareButton = document.getElementById('compare-button');
+        // Get the data container element
+        const dataContainer = document.getElementById('data-container');
 
-        // Function to compare two stocks
-        function compareStocks(stock1, stock2) {
-            // Check if the stocks exist in the data
-            if (data.hasOwnProperty(stock1) && data.hasOwnProperty(stock2)) {
-                const stock1Data = data[stock1][0];
-                const stock2Data = data[stock2][0];
+        // Get the search input and search button elements
+        const searchInput = document.getElementById('search-input');
+        const searchButton = document.getElementById('search-button');
 
-                // Get the keys and values for each stock
-                const stock1Keys = Object.keys(stock1Data);
-                const stock1Values = Object.values(stock1Data);
-                const stock2Keys = Object.keys(stock2Data);
-                const stock2Values = Object.values(stock2Data);
+        // Get the stock list datalist element
+        const stockList = document.getElementById('stock-list');
 
-                // Create a canvas element for the double bar graph
-                const canvas = document.getElementById('chart');
+        // Function to display data for a specific stock
+        function displayStock(stock) {
+            // Clear the data container
+            dataContainer.innerHTML = '';
 
-                // Create the double bar graph using Chart.js
-                new Chart(canvas, {
+            // Check if the stock exists in the data
+            if (data.hasOwnProperty(stock)) {
+                const stockData = data[stock][0];
+
+                // Create a new heading element for the stock
+                const stockHeading = document.createElement('h2');
+                stockHeading.textContent = stock;
+                dataContainer.appendChild(stockHeading);
+
+                // Create an array to hold labels and data for the bar graph
+                const labels = [];
+                const values = [];
+
+                // Iterate over each key-value pair in the stock data
+                for (const key in stockData) {
+                    labels.push(key);
+                    values.push(stockData[key]);
+                }
+
+                // Create a canvas element for the bar graph
+                const canvas = document.createElement('canvas');
+                dataContainer.appendChild(canvas);
+
+                // Create the bar graph using Chart.js
+                new Chart(canvas.getContext('2d'), {
                     type: 'bar',
                     data: {
-                        labels: stock1Keys,
-                        datasets: [
-                            {
-                                label: stock1,
-                                data: stock1Values,
-                                backgroundColor: 'rgba(75, 192, 192, 0.6)',
-                            },
-                            {
-                                label: stock2,
-                                data: stock2Values,
-                                backgroundColor: 'rgba(255, 99, 132, 0.6)',
-                            },
-                        ],
+                        labels: labels,
+                        datasets: [{
+                            label: 'Stock Data',
+                            data: values,
+                            backgroundColor: 'rgba(75, 192, 192, 0.6)'
+                        }]
                     },
                     options: {
                         responsive: true,
                         scales: {
                             y: {
-                                beginAtZero: true,
-                            },
-                        },
-                    },
+                                beginAtZero: true
+                            }
+                        }
+                    }
                 });
             } else {
-                console.log('One or both stocks not found');
+                // Display a message if the stock is not found
+                const errorMessage = document.createElement('p');
+                errorMessage.textContent = 'Stock not found';
+                dataContainer.appendChild(errorMessage);
             }
         }
 
-        // Add event listener to the compare button
-        compareButton.addEventListener('click', () => {
-            const stock1 = stock1Input.value.trim();
-            const stock2 = stock2Input.value.trim();
-            compareStocks(stock1, stock2);
+        // Function to update the stock list for autocomplete
+        function updateStockList() {
+            // Clear the stock list
+            stockList.innerHTML = '';
+
+            // Get the keys of the stocks
+            const stockKeys = Object.keys(data);
+
+            // Create option elements for each stock
+            stockKeys.forEach(stock => {
+                const option = document.createElement('option');
+                option.value = stock;
+                stockList.appendChild(option);
+            });
+        }
+
+        // Add event listener to the search button
+        searchButton.addEventListener('click', () => {
+            const stock = searchInput.value.trim();
+            displayStock(stock);
         });
+
+        // Add event listener to the search input for autocomplete
+        searchInput.addEventListener('input', () => {
+            const input = searchInput.value.trim().toLowerCase();
+
+            // Filter the stock list based on the input value
+            const filteredStocks = Object.keys(data).filter(stock => stock.toLowerCase().includes(input));
+
+            // Update the stock list options
+            stockList.innerHTML = '';
+            filteredStocks.forEach(stock => {
+                const option = document.createElement('option');
+                option.value = stock;
+                stockList.appendChild(option);
+            });
+        });
+
+        // Display the initial data
+        displayStock('20MICRONS');
+
+        // Update the stock list
+        updateStockList();
     })
     .catch(error => console.error(error));
