@@ -11,7 +11,7 @@ fetch('data.json')
         const pageNumber = document.getElementById('page-number');
 
         // Set the number of bar graphs to display per page
-        const graphsPerPage = 2;
+        const graphsPerPage = 20;
 
         // Calculate the total number of pages
         const totalPages = Math.ceil(Object.keys(data).length / graphsPerPage);
