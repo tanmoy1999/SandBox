@@ -29,7 +29,7 @@ fetch('https://tanmoy1999.github.io/StockChangeCapture/JSONOutput/May2023.json')
                 dataContainer.appendChild(stockHeading);
 
                 // Create an array to hold labels and data for the bar graph
-                const labels = [];
+                var labels = [];
                 const values = [];
 
                 // Iterate over each key-value pair in the stock data
@@ -40,7 +40,8 @@ fetch('https://tanmoy1999.github.io/StockChangeCapture/JSONOutput/May2023.json')
                 labels.reverse()
                 values.reverse()
                 console.log(values)
-
+                labels = labels.map(item => item.replace("bhav.csv", "").replace("cm", ""));
+                
                 // Create a canvas element for the bar graph
                 const canvas = document.createElement('canvas');
                 dataContainer.appendChild(canvas);
