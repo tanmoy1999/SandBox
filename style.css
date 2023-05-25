@@ -1,4 +1,8 @@
 /* Add styling for the search container */
+/* body {
+    background: linear-gradient(to bottom, #96e195, #c5b9b9);
+} */
+
 #search-container {
     margin-bottom: 20px;
 }
@@ -22,6 +26,14 @@
     height: 50%;
 } */
 #data-container {
+    max-width: 70%;
+    height: auto;
+    margin: 0 auto;
+    /* padding: 10px; */
+    box-sizing: border-box;
+}
+
+#news-container {
     max-width: 70%;
     height: auto;
     margin: 0 auto;

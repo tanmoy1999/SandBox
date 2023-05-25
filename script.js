@@ -115,7 +115,7 @@ fetch('https://tanmoy1999.github.io/StockChangeCapture/JSONOutput/May2023.json')
         });
 
         // Display the initial data
-        displayStock('TCS','bar');
+        displayStock('Tata Consultancy Services Limited (TCS)','bar');
 
         // Update the stock list
         updateStockList();
@@ -128,6 +128,8 @@ fetch('https://tanmoy1999.github.io/StockChangeCapture/JSONOutput/May2023.json')
 // Current price close price volume diff -- 20/05
 // Graph for closing price
 // MF Data
+// Graph of all Indece https://archives.nseindia.com/content/indices/ind_close_all_18052023.csv
+// Get the volatility of stock
 // ------------------------------------------------------------------
 
 // Basic thing is data will be extracted by Python and exported as JSON and these json data will be used by front end JS html
