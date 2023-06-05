@@ -1,5 +1,5 @@
 // Fetch the JSON data
-fetch('https://tanmoy1999.github.io/StockChangeCapture/JSONOutput/May2023.json')
+fetch('https://tanmoy1999.github.io/StockChangeCapture/JSONOutput/June2023.json')
     .then(response => response.json())
     .then(data => {
         // Get the data container element
