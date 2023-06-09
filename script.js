@@ -28,6 +28,14 @@ fetch('https://tanmoy1999.github.io/StockChangeCapture/JSONOutput/' + monthYear 
         // Get the stock list datalist element
         const stockList = document.getElementById('stock-list');
 
+        function sumArrayValues(array) {
+            let sum = 0;
+            for (let i = 0; i < array.length; i++) {
+              sum += array[i];
+            }
+            return sum/array.length;
+          }
+
         // Function to display data for a specific stock
         function displayStock(stock,graphtype) {
             // Clear the data container
@@ -54,6 +62,16 @@ fetch('https://tanmoy1999.github.io/StockChangeCapture/JSONOutput/' + monthYear 
                 labels.reverse()
                 values.reverse()
                 console.log(values)
+
+                // Avg to stock change
+                const intArray = values.map(str => parseFloat(str));
+                const avgSum = sumArrayValues(intArray);
+                console.log("Avg: ",avgSum);
+                const AvgDisp = document.createElement('h4');
+                AvgDisp.textContent = 'Avg Change: ' + avgSum + '%';
+                dataContainer.appendChild(AvgDisp);
+
+                
                 labels = labels.map(item => item.replace("bhav.csv", "").replace("cm", ""));
                 
                 // Create a canvas element for the bar graph
