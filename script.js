@@ -1,5 +1,18 @@
 // Fetch the JSON data
-fetch('https://tanmoy1999.github.io/StockChangeCapture/JSONOutput/Jun2023.json')
+// Get current date
+var currentDate = new Date();
+
+// Get current month
+var month = currentDate.toLocaleString('default', { month: 'short' });
+
+// Get current year
+var year = currentDate.getFullYear();
+
+// Concatenate month and year
+var monthYear = month + year;
+
+console.log(monthYear);
+fetch('https://tanmoy1999.github.io/StockChangeCapture/JSONOutput/' + monthYear + '.json')
     .then(response => response.json())
     .then(data => {
         // Get the data container element
