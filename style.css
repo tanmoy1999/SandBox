@@ -12,6 +12,17 @@
     width: 200px;
 }
 
+a {
+    color: #0066cc;
+    text-decoration: none;
+    transition: color 0.3s ease;
+  }
+  
+  a:hover {
+    text-decoration: underline;
+    color: #ff9900;
+  }
+
 #graph-type {
     padding: 5px;
     width: 200px;
