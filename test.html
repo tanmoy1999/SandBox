@@ -11,7 +11,14 @@
 
     <div id="search-container">
         <input type="text" id="search-input" placeholder="Search for a stock" list="stock-list">
-        <input type="text" id="fetch-input" placeholder="Enter URL">
+        <!-- <input type="text" id="fetch-input" placeholder="Enter URL"> -->
+        <select id="fetch-input">
+            <option value="Jun2023">June 2023</option>
+            <option value="May2023">May 2023</option>
+            <option value="Jun2023_close">Closing Price of June 2023</option>
+            <option value="May2023_close">Closing Price of May 2023</option>
+            <!-- <option value="doughnut">doughnut Graph</option> -->
+        </select>
 
         <datalist id="stock-list"></datalist>
         <select id="graph-type">
@@ -19,7 +26,7 @@
             <option value="bar">Bar Graph</option>
             <!-- <option value="doughnut">doughnut Graph</option> -->
         </select>
-        <button id="search-button">Search</button>
+        <button id="search-button">Click Me 2 Times!</button>
         <!-- <a href="https://tanmoy1999.github.io/StockChangeCapture/JSONOutput/May2023.json">SOURCE</a> -->
     </div>
 
@@ -29,10 +36,10 @@
     <script>
 
 const fetchInput = document.getElementById('fetch-input');
-const fetchButton = document.getElementById('search-button');
+const searchButton = document.getElementById('search-button');
 
 // Add event listener to the fetch button
-fetchButton.addEventListener('click', () => {
+searchButton.addEventListener('hover', () => {
     const monthYear= fetchInput.value.trim();
         fetch("https://tanmoy1999.github.io/StockChangeCapture/JSONOutput/" + monthYear + '.json')
             .then(response => response.json())
@@ -42,7 +49,7 @@ fetchButton.addEventListener('click', () => {
 
         // Get the search input and search button elements
         const searchInput = document.getElementById('search-input');
-        const searchButton = document.getElementById('search-button');
+        // const searchButton = document.getElementById('search-button');
         const graphtype1 = document.getElementById('graph-type');
         const graphtype = graphtype1.value;
 
