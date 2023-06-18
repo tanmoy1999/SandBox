@@ -11,6 +11,9 @@ for i in lst:
     else:
         a[i] = 1
     
-print(sorted(a))
+print(sorted(a))    
 
-print(str1[::])
+for i in reversed(lst):
+    print(i)
+
+print(list(reversed(lst)))
