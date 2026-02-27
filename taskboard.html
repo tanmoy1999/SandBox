@@ -1,0 +1,1269 @@
+<!-- https://llamacoder.together.ai/chats/ZT3aO8rtrw_gu2DB -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TaskBoard MVP</title>
+    <style>
+        /* --- CSS VARIABLES & RESET --- */
+        :root {
+            --background: #ffffff;
+            --foreground: #0f172a;
+            --muted: #f1f5f9;
+            --muted-foreground: #64748b;
+            --border: #e2e8f0;
+            --primary: #0f172a;
+            --primary-foreground: #f8fafc;
+            --destructive: #ef4444;
+            --destructive-foreground: #fef2f2;
+            --card: #ffffff;
+            --card-foreground: #0f172a;
+            --radius: 0.5rem;
+            --shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+            
+            /* Column Accents */
+            --col-backlog: #64748b;
+            --col-progress: #f59e0b;
+            --col-completed: #10b981;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--background);
+            color: var(--foreground);
+            line-height: 1.5;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* --- LAYOUT --- */
+        .app-container {
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        header {
+            border-bottom: 1px solid var(--border);
+            padding: 1rem 1.5rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(8px);
+            z-index: 10;
+        }
+
+        h1 { font-size: 1.25rem; font-weight: 600; letter-spacing: -0.025em; }
+        .subtitle { font-size: 0.875rem; color: var(--muted-foreground); margin-top: 0.125rem; }
+
+        main {
+            flex: 1;
+            padding: 1.5rem;
+            overflow-x: hidden;
+            overflow-y: hidden;
+            display: flex;
+            justify-content: center;
+        }
+
+        .board {
+            display: flex;
+            gap: 1.5rem;
+            height: 100%;
+            width: 100%;
+            max-width: 1400px;
+        }
+
+        /* --- COLUMNS --- */
+        /* Column specific backgrounds */
+        .column {
+            flex: 1;
+        }
+
+        .column[data-column-id="backlog"] {
+            background: #f1f5f9; /* soft slate */
+            border: 1px solid #e2e8f0;
+        }
+
+        .column[data-column-id="in-progress"] {
+            background: #fef9c3; /* soft yellow */
+            border: 1px solid #fde047;
+        }
+
+        .column[data-column-id="completed"] {
+            background: #dcfce7; /* soft green */
+            border: 1px solid #86efac;
+        }
+
+        .column.drag-over {
+            border-color: var(--col-progress);
+            background: #fffbeb;
+        }
+
+        .column-header {
+            padding: 1rem;
+            font-weight: 600;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid rgba(0,0,0,0.05);
+        }
+
+        .badge {
+            background: rgba(0,0,0,0.1);
+            padding: 0.125rem 0.5rem;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: 500;
+        }
+
+        .task-list {
+            flex: 1;
+            padding: 0.75rem;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+
+        /* --- TASK CARDS --- */
+
+        .inline-add-form {
+            padding: 0.75rem;
+            background: white;
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+        }
+
+        /* Column-themed inline add forms */
+        .column[data-column-id="backlog"] .inline-add-form {
+            background: #e8edf4;
+            border: 1px solid #cbd5e1;
+        }
+        .column[data-column-id="in-progress"] .inline-add-form {
+            background: #fef3c7;
+            border: 1px solid #fcd34d;
+        }
+        .column[data-column-id="completed"] .inline-add-form {
+            background: #bbf7d0;
+            border: 1px solid #6ee7a0;
+        }
+
+        /* Column-themed Save button */
+        .column[data-column-id="backlog"] .inline-save-btn {
+            background: #475569; color: white; border: none;
+        }
+        .column[data-column-id="backlog"] .inline-save-btn:hover { background: #334155; }
+        .column[data-column-id="in-progress"] .inline-save-btn {
+            background: #d97706; color: white; border: none;
+        }
+        .column[data-column-id="in-progress"] .inline-save-btn:hover { background: #b45309; }
+        .column[data-column-id="completed"] .inline-save-btn {
+            background: #059669; color: white; border: none;
+        }
+        .column[data-column-id="completed"] .inline-save-btn:hover { background: #047857; }
+
+        /* Drop indicator line between cards */
+        .drop-indicator {
+            height: 3px;
+            border-radius: 2px;
+            margin: 2px 0;
+            pointer-events: none;
+        }
+        .column[data-column-id="backlog"] .drop-indicator { background: #64748b; }
+        .column[data-column-id="in-progress"] .drop-indicator { background: #f59e0b; }
+        .column[data-column-id="completed"] .drop-indicator { background: #10b981; }
+
+        .due-date {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .due-date.overdue {
+            color: #ef4444;
+            font-weight: 500;
+        }
+
+        .task-card {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 0.75rem;
+            box-shadow: var(--shadow);
+            cursor: grab;
+            position: relative;
+            transition: transform 0.1s, box-shadow 0.1s;
+        }
+
+        .task-card:hover {
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+        }
+
+        .task-card:active {
+            cursor: grabbing;
+        }
+
+        .task-card.dragging {
+            opacity: 0.5;
+            border: 2px dashed var(--muted-foreground);
+        }
+
+        .task-card.blocked {
+            border-left: 4px solid #ef4444;
+            background: #fff1f2;
+        }
+
+        .task-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 0.5rem;
+            margin-bottom: 0.25rem;
+        }
+
+        .task-title {
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: var(--card-foreground);
+            flex: 1;
+        }
+
+        .task-meta {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-top: 0.5rem;
+            font-size: 0.75rem;
+            color: var(--muted-foreground);
+        }
+
+        .priority-badge {
+            font-size: 0.65rem;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+        .p1 { background: #fee2e2; color: #991b1b; }
+        .p2 { background: #ffedd5; color: #9a3412; }
+        .p3 { background: #f1f5f9; color: #475569; }
+
+        .btn-icon {
+            background: transparent;
+            border: none;
+            cursor: pointer;
+            padding: 4px;
+            border-radius: 4px;
+            color: var(--muted-foreground);
+            opacity: 0;
+            transition: all 0.2s;
+        }
+
+        .task-card:hover .btn-icon { opacity: 1; }
+        .btn-icon:hover { background: var(--muted); color: var(--destructive); }
+
+        /* --- BUTTONS & INPUTS --- */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0.5rem 1rem;
+            border-radius: var(--radius);
+            font-size: 0.875rem;
+            font-weight: 500;
+            cursor: pointer;
+            border: 1px solid var(--border);
+            background: white;
+            transition: background 0.2s;
+            gap: 0.5rem;
+        }
+
+        .btn:hover { background: var(--muted); }
+        .btn-primary { background: var(--primary); color: var(--primary-foreground); border: none; }
+        .btn-primary:hover { background: #1e293b; }
+
+        .add-task-btn {
+            width: 100%;
+            margin-top: 0.75rem;
+            padding: 0.5rem;
+            border: 1px dashed var(--border);
+            background: transparent;
+            color: var(--muted-foreground);
+        }
+        .add-task-btn:hover { border-color: var(--primary); color: var(--primary); background: transparent; }
+
+        /* --- MODALS --- */
+        .btn-close-text {
+            background: transparent;
+            border: none;
+            color: #000; /* black text */
+            font-weight: 500;
+            cursor: pointer;
+        }
+        .modal-header {
+            padding: 1.25rem;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .btn-close-text:hover {
+            text-decoration: underline;
+        }
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(4px);
+            z-index: 50;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.2s;
+        }
+
+        .modal-overlay.open {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .modal {
+            background: white;
+            border-radius: 0.75rem;
+            width: 90%;
+            max-width: 500px;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.1);
+            transform: scale(0.95);
+            transition: transform 0.2s;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .modal-overlay.open .modal { transform: scale(1); }
+
+        .modal-header {
+            padding: 1.25rem;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-body { padding: 1.5rem; }
+        .modal-footer {
+            padding: 1rem 1.5rem;
+            border-top: 1px solid var(--border);
+            display: flex;
+            justify-content: flex-end;
+            gap: 0.75rem;
+            background: var(--muted);
+        }
+
+        /* Guide Modal Specifics */
+        
+        .guide-modal { max-width: 800px; }
+        .guide-section { margin-bottom: 2rem; }
+        .guide-section h3 { font-size: 1rem; margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem; }
+        .api-endpoint {
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            margin-bottom: 1rem;
+            overflow: hidden;
+        }
+        .api-head {
+            background: var(--muted);
+            padding: 0.75rem;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+        .method {
+            font-size: 0.75rem;
+            font-weight: bold;
+            padding: 2px 8px;
+            border-radius: 4px;
+        }
+        .get { background: #dbeafe; color: #1e40af; }
+        .post { background: #dcfce7; color: #166534; }
+        .put { background: #ffedd5; color: #9a3412; }
+        .delete { background: #fee2e2; color: #991b1b; }
+        
+        .api-body { padding: 1rem; }
+        pre {
+            background: #1e293b;
+            color: #f8fafc;
+            padding: 0.75rem;
+            border-radius: 0.375rem;
+            overflow-x: auto;
+            font-size: 0.75rem;
+            margin-top: 0.5rem;
+        }
+
+        /* --- FORMS --- */
+        .block-status {
+            border: 1px solid var(--border);
+            padding: 0.75rem;
+            border-radius: var(--radius);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .block-status.blocked {
+            background: #fff1f2;
+            border-color: #ef4444;
+            color: #ef4444;
+        }
+
+        .modal-footer {
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .modal-footer .btn {
+            flex: 1;
+        }
+
+        .modal-footer .btn:first-child {
+            margin-right: 10px;
+        }
+        .form-group { margin-bottom: 1rem; }
+        .form-label { display: block; font-size: 0.875rem; font-weight: 500; margin-bottom: 0.5rem; }
+        .form-input, .form-textarea, .form-select {
+            width: 100%;
+            padding: 0.5rem 0.75rem;
+            border-radius: var(--radius);
+            border: 1px solid var(--border);
+            font-size: 0.875rem;
+            font-family: inherit;
+        }
+        .form-input:focus, .form-textarea:focus {
+            outline: 2px solid var(--primary);
+            outline-offset: -1px;
+        }
+        .form-textarea { min-height: 80px; resize: vertical; }
+
+        /* --- UTILS --- */
+        .hidden { display: none !important; }
+        .icon { width: 16px; height: 16px; stroke-width: 2; }
+        .text-sm { font-size: 0.875rem; }
+        .text-muted { color: var(--muted-foreground); }
+    </style>
+</head>
+<body>
+
+<div class="app-container">
+    <header>
+        <div>
+            <h1>TaskBoard</h1>
+            <p class="subtitle">API-Ready Task Management System</p>
+        </div>
+        <button class="btn" id="btn-open-guide">
+            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path></svg>
+            Guide & API
+        </button>
+    </header>
+
+    <main>
+        <div class="board" id="board">
+            <!-- Columns will be injected by JS -->
+        </div>
+    </main>
+</div>
+
+<!-- TASK MODAL (ADD/EDIT) -->
+<div class="modal-overlay" id="task-modal">
+    <div class="modal">
+        <div class="modal-header">
+            <div>
+                <h2 id="task-modal-title">Edit Task</h2>
+                <p id="task-created-info" class="text-sm text-muted" style="margin-top:4px;"></p>
+            </div>
+
+            <button class="btn-icon" id="btn-close-task-modal">
+                ✕
+            </button>
+        </div>
+        <div class="modal-body">
+            <form id="task-form">
+                <input type="hidden" id="task-id">
+                <input type="hidden" id="task-column">
+
+                <!-- TITLE -->
+                <div class="form-group">
+                    <label class="form-label">Title</label>
+                    <input type="text" class="form-input" id="task-title" maxlength="100">
+                </div>
+
+                <!-- DESCRIPTION -->
+                <div class="form-group">
+                    <label class="form-label">Description</label>
+                    <textarea class="form-textarea" id="task-desc" maxlength="500"></textarea>
+                    <div style="text-align:right; font-size:12px; color:#64748b;">
+                        <span id="desc-count">0</span>/500
+                    </div>
+                </div>
+
+                <!-- DUE DATE -->
+                <div class="form-group">
+                    <label class="form-label">Due Date</label>
+                    <input type="date" class="form-input" id="task-date" placeholder="DD-MM-YYYY">
+                </div>
+
+                <!-- PRIORITY -->
+                <div class="form-group">
+                    <label class="form-label">Priority</label>
+                    <div>
+                        <label><input type="radio" name="priority" value="P1"> P1 - High</label><br>
+                        <label><input type="radio" name="priority" value="P2"> P2 - Medium</label><br>
+                        <label><input type="radio" name="priority" value="P3"> P3 - Low</label>
+                    </div>
+                </div>
+
+                <!-- STATUS -->
+                <div class="form-group">
+                    <label class="form-label">Status</label>
+                    <div id="block-toggle" class="block-status">
+                        Not Blocked - Click to block
+                    </div>
+                </div>
+            </form>
+        </div>
+        <div class="modal-footer">
+            <button class="btn" id="btn-cancel-task">Cancel</button>
+            <button class="btn btn-primary" id="btn-save-task">Save Task</button>
+        </div>
+    </div>
+</div>
+
+<!-- VIEW TASK MODAL -->
+<div class="modal-overlay" id="view-task-modal">
+    <div class="modal">
+        <div class="modal-header">
+            <h2>Task Details</h2>
+            <button id="btn-close-view-modal" class="btn btn-close-text">
+                X
+            </button>
+        </div>
+
+        <div class="modal-body" id="view-task-body">
+            <!-- Injected dynamically -->
+        </div>
+
+        <div class="modal-footer">
+            <button class="btn" id="btn-view-edit">Edit</button>
+            <button class="btn btn-primary" id="btn-view-delete" style="background:#ef4444;">Delete</button>
+        </div>
+    </div>
+</div>
+
+<!-- GUIDE MODAL -->
+<div class="modal-overlay" id="guide-modal">
+    <div class="modal guide-modal">
+        <div class="modal-header">
+            <h2>Documentation</h2>
+            <button class="btn-icon" id="btn-close-guide-modal">
+                <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+            </button>
+        </div>
+        <div class="modal-body">
+            <!-- User Guide -->
+            <div class="guide-section">
+                <h3>
+                    <svg class="icon" style="color:var(--col-progress)" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+                    User Interface Guide
+                </h3>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                    <div style="background: var(--muted); padding: 1rem; border-radius: var(--radius);">
+                        <strong>Add Task</strong>
+                        <p class="text-sm text-muted">Click "Add task" at the bottom of any column.</p>
+                    </div>
+                    <div style="background: var(--muted); padding: 1rem; border-radius: var(--radius);">
+                        <strong>Edit Task</strong>
+                        <p class="text-sm text-muted">Click on any task card to open details.</p>
+                    </div>
+                    <div style="background: var(--muted); padding: 1rem; border-radius: var(--radius);">
+                        <strong>Delete Task</strong>
+                        <p class="text-sm text-muted">Hover over a card and click the trash icon.</p>
+                    </div>
+                    <div style="background: var(--muted); padding: 1rem; border-radius: var(--radius);">
+                        <strong>Move Task</strong>
+                        <p class="text-sm text-muted">Drag and drop tasks between columns.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- API Guide -->
+            <div class="guide-section">
+                <h3>
+                    <svg class="icon" style="color:var(--col-backlog)" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 18 22 12 16 6"></polyline><polyline points="8 6 2 12 8 18"></polyline></svg>
+                    API Reference
+                </h3>
+                <p class="text-sm text-muted" style="margin-bottom: 1rem;">Simulated RESTful endpoints. Base URL: <code>/api</code></p>
+
+                <div class="api-endpoint">
+                    <div class="api-head">
+                        <span class="method get">GET</span>
+                        <code>/tasks</code>
+                    </div>
+                    <div class="api-body">
+                        <p class="text-sm">Fetches the current state of the entire board.</p>
+                    </div>
+                </div>
+
+                <div class="api-endpoint">
+                    <div class="api-head">
+                        <span class="method post">POST</span>
+                        <code>/tasks</code>
+                    </div>
+                    <div class="api-body">
+                        <p class="text-sm">Creates a new task.</p>
+                        <pre>{
+  "column": "backlog",
+  "text": "New Task",
+  "description": "...",
+  "date": "2024-01-20",
+  "priority": "P1"
+}</pre>
+                    </div>
+                </div>
+
+                <div class="api-endpoint">
+                    <div class="api-head">
+                        <span class="method put">PUT</span>
+                        <code>/tasks/:id</code>
+                    </div>
+                    <div class="api-body">
+                        <p class="text-sm">Updates an existing task.</p>
+                        <pre>{
+  "column": "in-progress",
+  "text": "Updated Title",
+  "description": "...",
+  "date": "2024-01-25",
+  "priority": "P2"
+}</pre>
+                    </div>
+                </div>
+
+                <div class="api-endpoint">
+                    <div class="api-head">
+                        <span class="method delete">DELETE</span>
+                        <code>/tasks/:id</code>
+                    </div>
+                    <div class="api-body">
+                        <p class="text-sm">Permanently removes a task.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-primary" id="btn-close-guide-footer">Close Guide</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    const descInput = document.getElementById('task-desc');
+    const descCount = document.getElementById('desc-count');
+
+    descInput.addEventListener('input', () => {
+        descCount.textContent = descInput.value.length;
+    });
+
+    let isBlocked = false;
+
+    document.getElementById('block-toggle').onclick = function () {
+        isBlocked = !isBlocked;
+        const el = document.getElementById('block-toggle');
+
+        if (isBlocked) {
+            el.classList.add('blocked');
+            el.textContent = "Blocked - Click to unblock";
+        } else {
+            el.classList.remove('blocked');
+            el.textContent = "Not Blocked - Click to block";
+        }
+    };
+
+    window.openViewTaskModal = function(columnId, taskId) {
+        const task = boardState[columnId].find(t => t.id === taskId);
+        if (!task) return;
+
+        const createdDaysAgo = Math.floor(
+            (new Date() - new Date(task.createdAt)) / (1000 * 60 * 60 * 24)
+        );
+
+        const body = document.getElementById('view-task-body');
+
+        body.innerHTML = `
+            <p class="text-sm text-muted">
+                Created ${createdDaysAgo} day(s) ago • ${columnId}
+            </p>
+
+            <div style="margin-top:1rem;">
+                <h4 style="font-size:12px; color:#64748b; letter-spacing:1px;">TITLE</h4>
+                <p>${escapeHtml(task.text)}</p>
+            </div>
+
+            <div style="margin-top:1rem;">
+                <h4 style="font-size:12px; color:#64748b; letter-spacing:1px;">DESCRIPTION</h4>
+                <p>${escapeHtml(task.description || '')}</p>
+            </div>
+
+            <div style="display:flex; justify-content:space-between; margin-top:1.5rem;">
+                <div>
+                    <h4 style="font-size:12px; color:#64748b;">DUE DATE</h4>
+                    <p>${task.date || 'No date'}</p>
+                </div>
+
+                <div>
+                    <h4 style="font-size:12px; color:#64748b;">PRIORITY</h4>
+                    <span class="priority-badge ${task.priority.toLowerCase()}">${task.priority}</span>
+                </div>
+            </div>
+        `;
+
+        document.getElementById('btn-view-edit').onclick = () => {
+            closeModal(document.getElementById('view-task-modal'));
+            openEditTaskModal(columnId, taskId);
+        };
+
+        document.getElementById('btn-view-delete').onclick = async () => {
+            if (confirm('Delete this task?')) {
+                boardState = await api.deleteTask(columnId, taskId);
+                closeModal(document.getElementById('view-task-modal'));
+                renderBoard();
+            }
+        };
+
+        openModal(document.getElementById('view-task-modal'));
+    };
+    
+
+    /* --- MOCK API SERVICE --- */
+    const api = {
+        data: {
+            backlog: [
+                { id: '1', text: 'Research competitor features', description: 'Analyze top 3 competitors.', date: '2024-01-15', priority: 'P1', blocked: true, createdAt: new Date().toISOString()},
+                { id: '2', text: 'Design system components', description: 'Create reusable UI components.', date: '2024-01-20', priority: 'P2', blocked: true, createdAt: new Date().toISOString() }
+            ],
+            'in-progress': [
+                { id: '3', text: 'Implement drag and drop', description: 'Add native HTML5 drag and drop.', date: '2024-01-18', priority: 'P1', blocked: true, createdAt: new Date().toISOString() }
+            ],
+            completed: [
+                { id: '4', text: 'Setup project structure', description: 'Initialize the project.', date: '2024-01-10', priority: 'P3', blocked: false, createdAt: new Date().toISOString() }
+            ]
+        },
+
+        delay: (ms) => new Promise(resolve => setTimeout(resolve, ms)),
+
+        async getTasks() {
+            await this.delay(300);
+            return JSON.parse(JSON.stringify(this.data));
+        },
+
+        async addTask(column, taskData) {
+            await this.delay(200);
+            const newTask = {
+                id: Date.now().toString(),
+                blocked: false,
+                createdAt: new Date().toISOString(),
+                ...taskData
+            };
+            this.data[column].unshift(newTask);
+            return JSON.parse(JSON.stringify(this.data));
+        },
+
+        async updateTask(column, id, taskData) {
+            await this.delay(200);
+            const index = this.data[column].findIndex(t => t.id === id);
+            if (index !== -1) {
+                this.data[column][index] = { ...this.data[column][index], ...taskData };
+            }
+            return JSON.parse(JSON.stringify(this.data));
+        },
+
+        async deleteTask(column, id) {
+            await this.delay(200);
+            this.data[column] = this.data[column].filter(t => t.id !== id);
+            return JSON.parse(JSON.stringify(this.data));
+        },
+
+        async moveTask(taskId, fromCol, toCol, afterTaskId) {
+            await this.delay(150);
+            const taskIndex = this.data[fromCol].findIndex(t => t.id === taskId);
+            if (taskIndex === -1) return this.data;
+
+            const [task] = this.data[fromCol].splice(taskIndex, 1);
+
+            if (afterTaskId === null) {
+                // Drop at top
+                this.data[toCol].unshift(task);
+            } else if (afterTaskId === undefined) {
+                // Drop at bottom (no specific position)
+                this.data[toCol].push(task);
+            } else {
+                const afterIndex = this.data[toCol].findIndex(t => t.id === afterTaskId);
+                if (afterIndex === -1) {
+                    this.data[toCol].push(task);
+                } else {
+                    this.data[toCol].splice(afterIndex + 1, 0, task);
+                }
+            }
+            return JSON.parse(JSON.stringify(this.data));
+        }
+    };
+
+    /* --- STATE & DOM --- */
+    let boardState = {
+        backlog: [],
+        'in-progress': [],
+        completed: []
+    };
+
+    const columns = [
+        { id: 'backlog', title: 'Backlog', color: 'var(--col-backlog)' },
+        { id: 'in-progress', title: 'In Progress', color: 'var(--col-progress)' },
+        { id: 'completed', title: 'Completed', color: 'var(--col-completed)' }
+    ];
+
+    const boardEl = document.getElementById('board');
+    
+    // Modal Elements
+    const taskModal = document.getElementById('task-modal');
+    const guideModal = document.getElementById('guide-modal');
+    const taskForm = document.getElementById('task-form');
+    
+    /* --- RENDER FUNCTIONS --- */
+    function renderBoard() {
+        boardEl.innerHTML = '';
+        columns.forEach(col => {
+            const colEl = document.createElement('div');
+            colEl.className = 'column';
+            colEl.dataset.columnId = col.id;
+            
+            // Drag Events for Column
+            colEl.addEventListener('dragover', handleDragOver);
+            colEl.addEventListener('dragleave', handleDragLeave);
+            colEl.addEventListener('drop', handleDrop);
+
+            const tasks = boardState[col.id] || [];
+
+            colEl.innerHTML = `
+                <div class="column-header">
+                    <span style="color: ${col.color}">${col.title}</span>
+                    <span class="badge">${tasks.length}</span>
+                </div>
+                <div class="task-list">
+                    ${tasks.map(task => renderTaskHTML(task, col.id)).join('')}
+                </div>
+                <div id="add-container-${col.id}">
+                    <button class="btn add-task-btn" onclick="showInlineAdd('${col.id}')">
+                        + Add task
+                    </button>
+                </div>
+            `;
+            boardEl.appendChild(colEl);
+        });
+    }
+
+    function showInlineAdd(columnId) {
+        const container = document.getElementById(`add-container-${columnId}`);
+
+        container.innerHTML = `
+            <div class="inline-add-form">
+                <input type="text" id="inline-title-${columnId}" 
+                    class="form-input" placeholder="Task title..." />
+
+                <textarea id="inline-desc-${columnId}" 
+                    class="form-textarea" placeholder="Add details about this task..."></textarea>
+
+                <div style="display:flex; gap:10px; margin-top:10px;">
+                    <input type="date" id="inline-date-${columnId}" 
+                        class="form-input" style="flex:1;" />
+
+                    <select id="inline-priority-${columnId}" 
+                        class="form-input" style="flex:1;">
+                        <option value="P1">P1 - High</option>
+                        <option value="P2">P2 - Medium</option>
+                        <option value="P3" selected>P3 - Low</option>
+                    </select>
+                </div>
+
+                <div style="display:flex; gap:10px; margin-top:12px;">
+                    <button class="btn inline-save-btn" 
+                        onclick="saveInlineTask('${columnId}')">
+                        Save
+                    </button>
+                    <button class="btn" 
+                        onclick="renderBoard()">
+                        Cancel
+                    </button>
+                </div>
+            </div>
+        `;
+    }
+
+    async function saveInlineTask(columnId) {
+        const title = document.getElementById(`inline-title-${columnId}`).value.trim();
+        const description = document.getElementById(`inline-desc-${columnId}`).value.trim();
+        const date = document.getElementById(`inline-date-${columnId}`).value;
+        const priority = document.getElementById(`inline-priority-${columnId}`).value;
+
+        if (!title) {
+            alert("Title is required");
+            return;
+        }
+
+        boardState = await api.addTask(columnId, {
+            text: title,
+            description,
+            date,
+            priority,
+            blocked: false,
+            createdAt: new Date().toISOString()
+        });
+
+        renderBoard();
+    }
+
+    function renderTaskHTML(task, columnId) {
+        return `
+            <div class="task-card ${task.blocked ? 'blocked' : ''}" draggable="true" data-id="${task.id}" data-column="${columnId}">
+                <div class="task-header">
+                    <span class="task-title">${escapeHtml(task.text)}</span>
+
+                    <div style="display:flex; align-items:center; gap:6px;">
+
+                        ${task.blocked ? `
+                        <svg 
+                            onclick="toggleBlock('${columnId}', '${task.id}')"
+                            style="color:#ef4444; cursor:pointer;"
+                            class="icon"
+                            viewBox="0 0 24 24"
+                            fill="currentColor">
+                            <path d="M12 2l8 4v6c0 5-3.5 9.7-8 10-4.5-.3-8-5-8-10V6l8-4z"/>
+                        </svg>
+                        ` : `
+                        <svg 
+                            onclick="toggleBlock('${columnId}', '${task.id}')"
+                            style="color:#94a3b8; cursor:pointer;"
+                            class="icon"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            stroke-width="2">
+                            <path d="M12 2l8 4v6c0 5-3.5 9.7-8 10-4.5-.3-8-5-8-10V6l8-4z"/>
+                        </svg>
+                        `}
+
+                        <button class="btn-icon" onclick="deleteTask('${columnId}', '${task.id}')" title="Delete">
+                            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+                                <polyline points="3 6 5 6 21 6"></polyline>
+                                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                            </svg>
+                        </button>
+
+                    </div>
+                </div>
+                <div class="task-meta">
+                    <span class="priority-badge ${task.priority.toLowerCase()}">${task.priority}</span>
+                    <span class="due-date ${getDueStatus(task.date).includes('overdue') ? 'overdue' : ''}">
+                        ${getDueStatus(task.date)}
+                    </span>
+                </div>
+                <!-- Click to Edit Overlay -->
+                <div style="position:absolute; inset:0; cursor:pointer;" onclick="openViewTaskModal('${columnId}', '${task.id}')"></div>
+            </div>
+        `;
+    }
+
+    /* --- DRAG AND DROP LOGIC --- */
+    let draggedTask = null;
+
+    function handleDragStart(e) {
+        const card = e.target.closest('.task-card');
+        if (!card) return;
+        draggedTask = {
+            id: card.dataset.id,
+            fromCol: card.dataset.column
+        };
+        card.classList.add('dragging');
+        e.dataTransfer.effectAllowed = 'move';
+    }
+
+    function handleDragEnd(e) {
+        const card = e.target.closest('.task-card');
+        if (card) card.classList.remove('dragging');
+        document.querySelectorAll('.column').forEach(col => col.classList.remove('drag-over'));
+        removeDropIndicator();
+        draggedTask = null;
+    }
+
+    function removeDropIndicator() {
+        document.querySelectorAll('.drop-indicator').forEach(el => el.remove());
+    }
+
+    function getCardBeforePoint(taskList, y) {
+        // Returns the card we are hovering ABOVE (insert before it)
+        const cards = [...taskList.querySelectorAll('.task-card:not(.dragging)')];
+        return cards.reduce((closest, card) => {
+            const box = card.getBoundingClientRect();
+            const offset = y - box.top - box.height / 2;
+            if (offset < 0 && offset > closest.offset) {
+                return { offset, element: card };
+            }
+            return closest;
+        }, { offset: Number.NEGATIVE_INFINITY }).element;
+    }
+
+    function handleDragOver(e) {
+        e.preventDefault();
+        const col = e.target.closest('.column');
+        if (!col) return;
+        col.classList.add('drag-over');
+
+        removeDropIndicator();
+        const taskList = col.querySelector('.task-list');
+        if (!taskList) return;
+
+        const beforeCard = getCardBeforePoint(taskList, e.clientY);
+        const indicator = document.createElement('div');
+        indicator.className = 'drop-indicator';
+        if (beforeCard) {
+            taskList.insertBefore(indicator, beforeCard);
+        } else {
+            taskList.appendChild(indicator);
+        }
+    }
+
+    function handleDragLeave(e) {
+        const col = e.target.closest('.column');
+        if (col && !col.contains(e.relatedTarget)) {
+            col.classList.remove('drag-over');
+            removeDropIndicator();
+        }
+    }
+
+    async function handleDrop(e) {
+        e.preventDefault();
+        removeDropIndicator();
+        const col = e.target.closest('.column');
+        if (!col || !draggedTask) return;
+
+        const toCol = col.dataset.columnId;
+        const taskList = col.querySelector('.task-list');
+
+        // Find what card we are dropping BEFORE
+        const beforeCard = getCardBeforePoint(taskList, e.clientY);
+
+        let afterTaskId;
+        if (!beforeCard) {
+            // Dropped at the bottom
+            const allCards = [...taskList.querySelectorAll('.task-card:not(.dragging)')];
+            const lastCard = allCards[allCards.length - 1];
+            afterTaskId = lastCard ? lastCard.dataset.id : undefined;
+        } else {
+            // Dropped before beforeCard — so after the previous card
+            const allCards = [...taskList.querySelectorAll('.task-card:not(.dragging)')];
+            const idx = allCards.indexOf(beforeCard);
+            afterTaskId = idx === 0 ? null : allCards[idx - 1].dataset.id;
+        }
+
+        boardState = await api.moveTask(draggedTask.id, draggedTask.fromCol, toCol, afterTaskId);
+        renderBoard();
+    }
+
+    // Attach Drag Events via Delegation
+    boardEl.addEventListener('dragstart', handleDragStart);
+    boardEl.addEventListener('dragend', handleDragEnd);
+
+    /* --- MODAL LOGIC --- */
+    function openModal(modal) {
+        modal.classList.add('open');
+    }
+    function closeModal(modal) {
+        modal.classList.remove('open');
+    }
+
+    // Guide Modal
+    document.getElementById('btn-open-guide').onclick = () => openModal(guideModal);
+    document.getElementById('btn-close-guide-modal').onclick = () => closeModal(guideModal);
+    document.getElementById('btn-close-guide-footer').onclick = () => closeModal(guideModal);
+
+    // View Task Modal Close Button
+    document.getElementById('btn-close-view-modal').onclick = () => closeModal(document.getElementById('view-task-modal'));
+
+    // Task Modal
+    function openAddTaskModal(columnId) {
+        document.getElementById('task-modal-title').textContent = 'Add New Task';
+        document.getElementById('task-id').value = '';
+        document.getElementById('task-column').value = columnId;
+        document.getElementById('task-title').value = '';
+        document.getElementById('task-desc').value = '';
+        document.getElementById('task-date').value = new Date().toISOString().split('T')[0];
+        document.getElementById('task-priority').value = 'P3';
+        openModal(taskModal);
+    }
+
+    function formatDate(dateStr) {
+        if (!dateStr) return '';
+        const d = new Date(dateStr);
+        const day = String(d.getDate()).padStart(2, '0');
+        const month = String(d.getMonth() + 1).padStart(2, '0');
+        const year = d.getFullYear();
+        return `${day}-${month}-${year}`;
+    }
+
+    function openEditTaskModal(columnId, taskId) {
+        const task = boardState[columnId].find(t => t.id === taskId);
+        if (!task) return;
+
+        document.getElementById('task-id').value = taskId;
+        document.getElementById('task-column').value = columnId;
+
+        document.getElementById('task-title').value = task.text;
+        document.getElementById('task-desc').value = task.description || '';
+        descCount.textContent = task.description?.length || 0;
+
+        document.getElementById('task-date').value = task.date || '';
+
+        document.querySelector(`input[name="priority"][value="${task.priority}"]`).checked = true;
+
+        isBlocked = task.blocked || false;
+        const blockEl = document.getElementById('block-toggle');
+        if (isBlocked) {
+            blockEl.classList.add('blocked');
+            blockEl.textContent = "Blocked - Click to unblock";
+        } else {
+            blockEl.classList.remove('blocked');
+            blockEl.textContent = "Not Blocked - Click to block";
+        }
+
+        const createdDaysAgo = Math.floor(
+            (new Date() - new Date(task.createdAt)) / (1000 * 60 * 60 * 24)
+        );
+
+        document.getElementById('task-created-info').textContent =
+            `Created ${createdDaysAgo} day(s) ago • ${columnId}`;
+
+        openModal(taskModal);
+    }
+
+    document.getElementById('btn-close-task-modal').onclick = () => closeModal(taskModal);
+    document.getElementById('btn-cancel-task').onclick = () => closeModal(taskModal);
+
+    // Save Task
+    document.getElementById('btn-save-task').onclick = async () => {
+        const id = document.getElementById('task-id').value;
+        const column = document.getElementById('task-column').value;
+
+        const text = document.getElementById('task-title').value.trim();
+        const description = document.getElementById('task-desc').value.trim();
+        const date = document.getElementById('task-date').value;
+
+        // Get selected radio priority
+        const priorityRadio = document.querySelector('input[name="priority"]:checked');
+        const priority = priorityRadio ? priorityRadio.value : "P3";
+
+        if (!text) {
+            alert("Title is required");
+            return;
+        }
+
+        if (id) {
+            // UPDATE
+            boardState = await api.updateTask(column, id, {
+                text,
+                description,
+                date,
+                priority,
+                blocked: isBlocked
+            });
+        } else {
+            // CREATE
+            boardState = await api.addTask(column, {
+                text,
+                description,
+                date,
+                priority,
+                blocked: false,
+                createdAt: new Date().toISOString()
+            });
+        }
+
+        closeModal(taskModal);
+        renderBoard();
+    };
+
+    // Delete Task
+    window.deleteTask = async (column, id) => {
+        if (confirm('Are you sure you want to delete this task?')) {
+            boardState = await api.deleteTask(column, id);
+            renderBoard();
+        }
+    };
+
+    window.toggleBlock = async (column, id) => {
+        const task = boardState[column].find(t => t.id === id);
+        if (!task) return;
+
+        boardState = await api.updateTask(column, id, {
+            blocked: !task.blocked
+        });
+
+        renderBoard();
+    };
+
+    /* --- UTILS --- */
+    function escapeHtml(text) {
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    }
+
+    function getDueStatus(dateString) {
+        if (!dateString) return 'No Date';
+
+        const today = new Date();
+        const due = new Date(dateString);
+
+        today.setHours(0,0,0,0);
+        due.setHours(0,0,0,0);
+
+        const diffTime = due - today;
+        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+        if (diffDays < 0) {
+            return `${Math.abs(diffDays)}d overdue`;
+        } else if (diffDays === 0) {
+            return 'Due today';
+        } else {
+            return `${diffDays}d left`;
+        }
+    }
+
+    /* --- INITIALIZATION --- */
+    (async function init() {
+        boardState = await api.getTasks();
+        renderBoard();
+    })();
+
+</script>
+</body>
+</html>
