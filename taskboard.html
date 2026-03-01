@@ -230,7 +230,7 @@
             cursor: grab;
             position: relative;
             transition: transform 0.1s, box-shadow 0.1s;
-            touch-action: pan-y;
+            touch-action: none;
         }
 
         .task-card:hover {
@@ -352,15 +352,16 @@
         .modal-overlay {
             position: fixed;
             inset: 0;
-            background: rgba(0, 0, 0, 0.5);
-            backdrop-filter: blur(4px);
+            background: rgba(15, 23, 42, 0.35);
+            backdrop-filter: blur(6px);
+            -webkit-backdrop-filter: blur(6px);
             z-index: 50;
             display: flex;
             align-items: center;
             justify-content: center;
             opacity: 0;
             pointer-events: none;
-            transition: opacity 0.2s;
+            transition: opacity 0.25s ease;
         }
 
         .modal-overlay.open {
@@ -370,19 +371,27 @@
 
         .modal {
             background: white;
-            border-radius: 0.75rem;
-            width: 90%;
-            max-width: 500px;
+            border-radius: 16px;
+            width: 92%;
+            max-width: 540px;
             max-height: 90vh;
             overflow-y: auto;
-            box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.1);
-            transform: scale(0.95);
-            transition: transform 0.2s;
+            box-shadow: 
+                0 10px 25px rgba(0,0,0,0.08),
+                0 20px 48px rgba(0,0,0,0.12);
+            transform: translateY(8px) scale(0.98);
+            opacity: 0;
+            transition: 
+                transform 0.25s cubic-bezier(.22,1,.36,1),
+                opacity 0.2s ease;
             display: flex;
             flex-direction: column;
         }
 
-        .modal-overlay.open .modal { transform: scale(1); }
+        .modal-overlay.open .modal {
+            transform: translateY(0) scale(1);
+            opacity: 1;
+        }
 
         .modal-header {
             padding: 1.25rem;
@@ -392,14 +401,19 @@
             align-items: center;
         }
 
-        .modal-body { padding: 1.5rem; }
+        .modal-body {
+            padding: 1.5rem;
+            overflow-y: auto;
+            flex: 1;
+        }
         .modal-footer {
-            padding: 1rem 1.5rem;
+            padding: 1rem 1.25rem;
             border-top: 1px solid var(--border);
             display: flex;
-            justify-content: flex-end;
             gap: 0.75rem;
-            background: var(--muted);
+            background: white;
+            flex-shrink: 0;   /* prevents shrinking */
+            box-shadow: 0 -4px 12px rgba(0,0,0,0.05);
         }
 
         /* Guide Modal Specifics */
@@ -465,10 +479,6 @@
             justify-content: space-between;
         }
 
-        .modal-footer .btn {
-            flex: 1;
-        }
-
         .modal-footer .btn:first-child {
             margin-right: 10px;
         }
@@ -493,6 +503,109 @@
         .icon { width: 16px; height: 16px; stroke-width: 2; }
         .text-sm { font-size: 0.875rem; }
         .text-muted { color: var(--muted-foreground); }
+
+        /* --- MOBILE MODAL STYLE --- */
+        @media (max-width: 768px) {
+
+            .modal-overlay {
+                align-items: flex-end;
+            }
+
+            .modal {
+                width: 100%;
+                max-width: 100%;
+                max-height: 92vh;
+                border-radius: 20px 20px 0 0;
+                transform: translateY(100%);
+                transition: transform 0.28s cubic-bezier(.22,1,.36,1);
+            }
+
+            .modal-overlay.open .modal {
+                transform: translateY(0);
+            }
+
+            /* Drag handle */
+            .modal::before {
+                content: "";
+                width: 40px;
+                height: 4px;
+                background: #cbd5e1;
+                border-radius: 999px;
+                align-self: center;
+                margin: 10px 0 4px 0;
+            }
+
+            .modal-footer {
+                position: sticky;
+                bottom: 0;
+                background: white;
+                padding: 1rem;
+                backdrop-filter: blur(8px);
+            }
+
+            .modal-footer .btn {
+                width: 100%;
+            }
+        }
+
+        .inline-add-form.sleek {
+            background: white;
+            border-radius: 14px;
+            padding: 12px;
+            border: 1px solid #e2e8f0;
+            transition: all 0.25s cubic-bezier(.22,1,.36,1);
+        }
+
+        .inline-add-form.sleek:focus-within {
+            box-shadow: 
+                0 4px 12px rgba(0,0,0,0.05),
+                0 10px 25px rgba(0,0,0,0.08);
+            border-color: #cbd5e1;
+        }
+
+        .sleek-title {
+            border: none;
+            font-size: 15px;
+            font-weight: 500;
+            padding: 6px 4px;
+        }
+
+        .sleek-title:focus {
+            outline: none;
+        }
+
+        .inline-extra {
+            margin-top: 10px;
+            animation: expandFade 0.25s ease;
+        }
+
+        @keyframes expandFade {
+            from {
+                opacity: 0;
+                transform: translateY(-4px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .inline-row {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .inline-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 12px;
+        }
+
+        .inline-actions .btn-primary {
+            flex: 1;
+        }
+
     </style>
 </head>
 <body>
@@ -522,6 +635,7 @@
         <div class="modal-header">
             <div>
                 <h2 id="task-modal-title">Edit Task</h2>
+                <p id="task-column-info" class="text-sm text-muted" style="margin-top:4px;"></p>
                 <p id="task-created-info" class="text-sm text-muted" style="margin-top:4px;"></p>
             </div>
 
@@ -717,6 +831,85 @@
 
     let isBlocked = false;
 
+    /* -------------------------
+    MOBILE TOUCH DRAG SYSTEM
+    --------------------------*/
+
+    let touchDragging = null;
+    let touchClone = null;
+
+    function startTouchDrag(e) {
+
+        const card = e.target.closest('.task-card');
+        if (!card) return;
+
+        e.preventDefault();
+
+        touchDragging = {
+            id: card.dataset.id,
+            column: card.dataset.column
+        };
+
+        const rect = card.getBoundingClientRect();
+
+        touchClone = card.cloneNode(true);
+        touchClone.style.position = "fixed";
+        touchClone.style.top = rect.top + "px";
+        touchClone.style.left = rect.left + "px";
+        touchClone.style.width = rect.width + "px";
+        touchClone.style.zIndex = 1000;
+        touchClone.style.opacity = 0.9;
+        touchClone.style.pointerEvents = "none";
+        touchClone.style.transform = "scale(1.05)";
+        touchClone.style.boxShadow = "0 12px 30px rgba(0,0,0,0.2)";
+
+        document.body.appendChild(touchClone);
+
+        card.style.visibility = "hidden";
+
+        document.addEventListener("touchmove", handleTouchMove, { passive: false });
+        document.addEventListener("touchend", handleTouchEnd);
+    }
+
+    function handleTouchMove(e) {
+        if (!touchClone) return;
+
+        const touch = e.touches[0];
+        touchClone.style.top = (touch.clientY - 30) + "px";
+        touchClone.style.left = (touch.clientX - 150) + "px";
+    }
+
+    async function handleTouchEnd(e) {
+
+        document.removeEventListener("touchmove", handleTouchMove);
+        document.removeEventListener("touchend", handleTouchEnd);
+
+        if (!touchDragging) return;
+
+        const touch = e.changedTouches[0];
+        const dropTarget = document.elementFromPoint(touch.clientX, touch.clientY);
+        const columnEl = dropTarget?.closest(".column");
+
+        if (columnEl) {
+            const newColumn = columnEl.dataset.columnId;
+
+            if (newColumn !== touchDragging.column) {
+                boardState = await api.moveTask(
+                    touchDragging.id,
+                    touchDragging.column,
+                    newColumn
+                );
+            }
+        }
+
+        renderBoard();
+
+        if (touchClone) touchClone.remove();
+
+        touchClone = null;
+        touchDragging = null;
+    }
+
     document.getElementById('block-toggle').onclick = function () {
         isBlocked = !isBlocked;
         const el = document.getElementById('block-toggle');
@@ -765,6 +958,22 @@
                     <h4 style="font-size:12px; color:#64748b;">PRIORITY</h4>
                     <span class="priority-badge ${task.priority.toLowerCase()}">${task.priority}</span>
                 </div>
+            </div>
+                        <div style="margin-top:1.5rem;">
+                <h4 style="font-size:12px; color:#64748b; letter-spacing:1px;">MOVE TO</h4>
+                <select id="move-task-select" class="form-input" style="margin-top:6px;">
+                    ${columns
+                        .filter(c => c.id !== columnId)
+                        .map(c => `<option value="${c.id}">${c.title}</option>`)
+                        .join('')}
+                </select>
+
+                <button 
+                    class="btn btn-primary" 
+                    style="margin-top:10px; width:100%;"
+                    onclick="moveTaskFromModal('${columnId}', '${taskId}')">
+                    Move Task
+                </button>
             </div>
         `;
 
@@ -892,7 +1101,7 @@
                     ${tasks.map(task => renderTaskHTML(task, col.id)).join('')}
                 </div>
                 <div id="add-container-${col.id}">
-                    <button class="btn add-task-btn" onclick="showInlineAdd('${col.id}')">
+                    <button class="btn add-task-btn" onclick="openAddTaskModal('${col.id}')">
                         + Add task
                     </button>
                 </div>
@@ -901,41 +1110,65 @@
         });
     }
 
-    function showInlineAdd(columnId) {
-        const container = document.getElementById(`add-container-${columnId}`);
+    // function showInlineAdd(columnId) {
+    //     const container = document.getElementById(`add-container-${columnId}`);
 
-        container.innerHTML = `
-            <div class="inline-add-form">
-                <input type="text" id="inline-title-${columnId}" 
-                    class="form-input" placeholder="Task title..." />
+    //     container.innerHTML = `
+    //         <div class="inline-add-form sleek">
+    //             <input 
+    //                 type="text" 
+    //                 id="inline-title-${columnId}" 
+    //                 class="form-input sleek-title"
+    //                 placeholder="What needs to be done?"
+    //                 onfocus="expandInline('${columnId}')"
+    //             />
 
-                <textarea id="inline-desc-${columnId}" 
-                    class="form-textarea" placeholder="Add details about this task..."></textarea>
+    //             <div class="inline-extra hidden" id="inline-extra-${columnId}">
+    //                 <textarea 
+    //                     id="inline-desc-${columnId}" 
+    //                     class="form-textarea"
+    //                     placeholder="Add more details..."
+    //                 ></textarea>
 
-                <div style="display:flex; gap:10px; margin-top:10px;">
-                    <input type="date" id="inline-date-${columnId}" 
-                        class="form-input" style="flex:1;" />
+    //                 <div class="inline-row">
+    //                     <input type="date" 
+    //                         id="inline-date-${columnId}" 
+    //                         class="form-input" />
 
-                    <select id="inline-priority-${columnId}" 
-                        class="form-input" style="flex:1;">
-                        <option value="P1">P1 - High</option>
-                        <option value="P2">P2 - Medium</option>
-                        <option value="P3" selected>P3 - Low</option>
-                    </select>
-                </div>
+    //                     <select id="inline-priority-${columnId}" 
+    //                         class="form-input">
+    //                         <option value="P1">🔥 High</option>
+    //                         <option value="P2">⚡ Medium</option>
+    //                         <option value="P3" selected>🌿 Low</option>
+    //                     </select>
+    //                 </div>
 
-                <div style="display:flex; gap:10px; margin-top:12px;">
-                    <button class="btn btn-primary" 
-                        onclick="saveInlineTask('${columnId}')">
-                        Save
-                    </button>
-                    <button class="btn" 
-                        onclick="renderBoard()">
-                        Cancel
-                    </button>
-                </div>
-            </div>
-        `;
+    //                 <div class="inline-actions">
+    //                     <button class="btn btn-primary"
+    //                         onclick="saveInlineTask('${columnId}')">
+    //                         Create Task
+    //                     </button>
+
+    //                     <button class="btn"
+    //                         onclick="renderBoard()">
+    //                         Cancel
+    //                     </button>
+    //                 </div>
+    //             </div>
+    //         </div>
+    //     `;
+    //     setTimeout(() => {
+    //         document.getElementById(`inline-title-${columnId}`).focus();
+    //     }, 50);
+    // }
+
+
+
+    function expandInline(columnId) {
+        const extra = document.getElementById(`inline-extra-${columnId}`);
+        if (!extra) return;
+
+        extra.classList.remove('hidden');
     }
 
     async function saveInlineTask(columnId) {
@@ -963,7 +1196,7 @@
 
     function renderTaskHTML(task, columnId) {
         return `
-            <div class="task-card ${task.blocked ? 'blocked' : ''}" draggable="true" data-id="${task.id}" data-column="${columnId}">
+            <div class="task-card ${task.blocked ? 'blocked' : ''}" draggable="true" ontouchstart="startTouchDrag(event)" data-id="${task.id}" data-column="${columnId}">
                 <div class="task-header">
                     <span class="task-title">${escapeHtml(task.text)}</span>
 
@@ -1126,6 +1359,37 @@
         modal.classList.remove('open');
     }
 
+    /* --- Swipe Down To Close Modal (Mobile) --- */
+
+    let modalTouchStart = 0;
+
+    document.querySelectorAll('.modal').forEach(modal => {
+
+        modal.addEventListener('touchstart', (e) => {
+            modalTouchStart = e.changedTouches[0].screenY;
+        }, { passive: true });
+
+        modal.addEventListener('touchend', (e) => {
+            const touchEnd = e.changedTouches[0].screenY;
+            const diff = touchEnd - modalTouchStart;
+
+            if (diff > 80) { // swipe down distance
+                const overlay = modal.closest('.modal-overlay');
+                closeModal(overlay);
+            }
+        });
+    });
+
+    document.querySelectorAll('.modal-overlay').forEach(overlay => {
+        overlay.addEventListener('click', function(e) {
+            if (e.target === overlay) {
+                closeModal(overlay);
+            }
+        });
+    });
+
+    
+
     // Guide Modal
     document.getElementById('btn-open-guide').onclick = () => openModal(guideModal);
     document.getElementById('btn-close-guide-modal').onclick = () => closeModal(guideModal);
@@ -1136,13 +1400,31 @@
 
     // Task Modal
     function openAddTaskModal(columnId) {
-        document.getElementById('task-modal-title').textContent = 'Add New Task';
+
+        document.getElementById('task-modal-title').textContent = 'Create Task';
+        const columnObj = columns.find(c => c.id === columnId);
+        document.getElementById('task-column-info').textContent =
+            `Creating in: ${columnObj.title}`;
+
         document.getElementById('task-id').value = '';
         document.getElementById('task-column').value = columnId;
+
         document.getElementById('task-title').value = '';
         document.getElementById('task-desc').value = '';
-        document.getElementById('task-date').value = new Date().toISOString().split('T')[0];
-        document.getElementById('task-priority').value = 'P3';
+        document.getElementById('task-date').value = '';
+
+        // Default priority
+        document.querySelectorAll('input[name="priority"]').forEach(r => r.checked = false);
+        document.querySelector('input[name="priority"][value="P3"]').checked = true;
+
+        // Reset block state
+        isBlocked = false;
+        const blockEl = document.getElementById('block-toggle');
+        blockEl.classList.remove('blocked');
+        blockEl.textContent = "Not Blocked - Click to block";
+
+        document.getElementById('task-created-info').textContent = '';
+
         openModal(taskModal);
     }
 
@@ -1157,6 +1439,9 @@
 
     function openEditTaskModal(columnId, taskId) {
         const task = boardState[columnId].find(t => t.id === taskId);
+        const columnObj = columns.find(c => c.id === columnId);
+        document.getElementById('task-column-info').textContent =
+            `Currently in: ${columnObj.title}`;
         if (!task) return;
 
         document.getElementById('task-id').value = taskId;
@@ -1253,6 +1538,18 @@
             blocked: !task.blocked
         });
 
+        renderBoard();
+    };
+
+    window.moveTaskFromModal = async function(currentColumn, taskId) {
+
+        const newColumn = document.getElementById('move-task-select').value;
+
+        if (!newColumn) return;
+
+        boardState = await api.moveTask(taskId, currentColumn, newColumn);
+
+        closeModal(document.getElementById('view-task-modal'));
         renderBoard();
     };
 
