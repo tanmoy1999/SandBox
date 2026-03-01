@@ -1196,7 +1196,7 @@
 
     function renderTaskHTML(task, columnId) {
         return `
-            <div class="task-card ${task.blocked ? 'blocked' : ''}" draggable="true" ontouchstart="startTouchDrag(event)" data-id="${task.id}" data-column="${columnId}">
+            <div class="task-card ${task.blocked ? 'blocked' : ''}" draggable="true" data-id="${task.id}" data-column="${columnId}">
                 <div class="task-header">
                     <span class="task-title">${escapeHtml(task.text)}</span>
 
