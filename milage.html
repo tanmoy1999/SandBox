@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mileage Tracker</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Custom styles to mimic Shadcn UI nuances */
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+        }
+        .input-field {
+            @apply flex h-10 w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm ring-offset-white file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-slate-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-950 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50;
+        }
+        .btn-primary {
+            @apply inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-slate-950 disabled:pointer-events-none disabled:opacity-50 bg-slate-900 text-slate-50 shadow hover:bg-slate-900/90 h-10 px-4 py-2 w-full;
+        }
+    </style>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body class="font-[Inter] bg-gradient-to-br from-slate-50 to-slate-100 min-h-screen p-6 md:p-10 text-slate-800">
+
+    <div class="max-w-7xl mx-auto">
+
+        <!-- Header -->
+        <header class="mb-10">
+            <h1 class="text-4xl font-bold tracking-tight">Mileage Tracker</h1>
+            <p class="text-slate-500 mt-2">Log fuel fills and monitor vehicle efficiency</p>
+        </header>
+
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+
+            <!-- LEFT COLUMN -->
+            <div class="lg:col-span-4 space-y-8">
+
+                <!-- Form Card -->
+                <div class="bg-white rounded-2xl shadow-lg border border-slate-200 p-6 space-y-6">
+
+                    <div>
+                        <h3 class="text-lg font-semibold">Log New Fill</h3>
+                        <p class="text-sm text-slate-500 mt-1">Enter receipt details</p>
+                    </div>
+
+                    <div class="space-y-4">
+
+                        <div>
+                            <label class="text-sm font-medium text-slate-600">Liters Filled</label>
+                            <input type="number" id="liters"
+                                class="mt-2 w-full rounded-xl border border-slate-300 focus:ring-2 focus:ring-slate-900 focus:outline-none px-4 py-2 text-sm transition"
+                                placeholder="0.0">
+                        </div>
+
+                        <div>
+                            <label class="text-sm font-medium text-slate-600">Kilometers Since Last Fill</label>
+                            <input type="number" id="kilometers"
+                                class="mt-2 w-full rounded-xl border border-slate-300 focus:ring-2 focus:ring-slate-900 focus:outline-none px-4 py-2 text-sm transition"
+                                placeholder="0">
+                        </div>
+
+                        <div>
+                            <label class="text-sm font-medium text-slate-600">Total Cost (₹)</label>
+                            <input type="number" id="cost"
+                                class="mt-2 w-full rounded-xl border border-slate-300 focus:ring-2 focus:ring-slate-900 focus:outline-none px-4 py-2 text-sm transition"
+                                placeholder="0.00">
+                        </div>
+
+                        <button id="logBtn"
+                                class="w-full bg-slate-900 hover:bg-slate-800 text-white font-medium py-3 rounded-xl transition shadow-md hover:shadow-lg">
+                            Log Fill
+                        </button>
+
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- RIGHT COLUMN -->
+            <div class="lg:col-span-8 space-y-8">
+
+                <!-- Stats -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+
+                    <div class="bg-white rounded-2xl shadow-md border border-slate-200 p-6">
+                        <p class="text-sm text-slate-500">Cost per Liter</p>
+                        <h2 id="displayCostPerLiter" class="text-3xl font-bold mt-2">₹0.00</h2>
+                    </div>
+
+                    <div class="bg-white rounded-2xl shadow-md border border-slate-200 p-6">
+                        <p class="text-sm text-slate-500">Fuel Efficiency (km/L)</p>
+                        <h2 id="displayEfficiency" class="text-3xl font-bold mt-2">0.00</h2>
+                    </div>
+
+                    <div class="bg-white rounded-2xl shadow-md border border-slate-200 p-6">
+                        <p class="text-sm text-slate-500">Cost per KM</p>
+                        <h2 id="displayCostPerKm" class="text-3xl font-bold mt-2">₹0.00</h2>
+                    </div>
+
+                </div>
+
+                <!-- History -->
+                <div class="bg-white rounded-2xl shadow-lg border border-slate-200 overflow-hidden">
+
+                    <div class="px-6 py-4 border-b border-slate-200">
+                        <h3 class="font-semibold text-lg">Fuel History</h3>
+                    </div>
+
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-sm">
+                            <thead class="bg-slate-50 text-slate-600">
+                            <tr>
+                                <th class="px-6 py-3 text-left">Date</th>
+                                <th class="px-6 py-3 text-right">Since</th>
+                                <th class="px-6 py-3 text-right">Liters</th>
+                                <th class="px-6 py-3 text-right">KM</th>
+                                <th class="px-6 py-3 text-right">Cost</th>
+                                <th class="px-6 py-3 text-right">Cost/L</th>
+                                <th class="px-6 py-3 text-right">km/L</th>
+                                <th class="px-6 py-3 text-right">Cost/KM</th>
+                            </tr>
+                            </thead>
+
+                            <tbody id="historyBody" class="divide-y divide-slate-100"></tbody>
+                        </table>
+                    </div>
+
+                    <div id="emptyState" class="text-center py-16 text-slate-400">
+                        <p class="text-lg font-medium">No entries yet</p>
+                        <p class="text-sm mt-2">Log your first fuel fill to get started</p>
+                    </div>
+
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // State
+        let entries = [];
+
+        // DOM Elements
+        const litersInput = document.getElementById('liters');
+        const kilometersInput = document.getElementById('kilometers');
+        const costInput = document.getElementById('cost');
+        const logBtn = document.getElementById('logBtn');
+        
+        const displayCostPerLiter = document.getElementById('displayCostPerLiter');
+        const displayEfficiency = document.getElementById('displayEfficiency');
+        const displayCostPerKm = document.getElementById('displayCostPerKm');
+        
+        const historyBody = document.getElementById('historyBody');
+        const emptyState = document.getElementById('emptyState');
+
+        // Utility: Format Date (DD MMM YYYY)
+        function formatDate(isoString) {
+            const date = new Date(isoString);
+            return date.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
+        }
+
+        // Utility: Calculate days difference
+        function getDaysSinceLast(currentDateStr, prevDateStr) {
+            if (!prevDateStr) return "—";
+            const current = new Date(currentDateStr);
+            const prev = new Date(prevDateStr);
+            const diffTime = Math.abs(current - prev);
+            const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24)); 
+            return `${diffDays}d`;
+        }
+
+        // Real-time Calculation
+        function updateCalculations() {
+            const liters = parseFloat(litersInput.value) || 0;
+            const kilometers = parseFloat(kilometersInput.value) || 0;
+            const cost = parseFloat(costInput.value) || 0;
+
+            // Cost per Liter
+            if (liters > 0) {
+                displayCostPerLiter.textContent = `₹${(cost / liters).toFixed(2)}`;
+            } else {
+                displayCostPerLiter.textContent = "N/A";
+            }
+
+            // Fuel Efficiency (km/L)
+            if (liters > 0) {
+                displayEfficiency.textContent = (kilometers / liters).toFixed(2);
+            } else {
+                displayEfficiency.textContent = "N/A";
+            }
+
+            // Cost per KM
+            if (kilometers > 0) {
+                displayCostPerKm.textContent = `₹${(cost / kilometers).toFixed(2)}`;
+            } else {
+                displayCostPerKm.textContent = "N/A";
+            }
+        }
+
+        // Render History Table
+        function renderHistory() {
+            historyBody.innerHTML = '';
+
+            if (entries.length === 0) {
+                emptyState.style.display = 'block';
+                return;
+            }
+
+            emptyState.style.display = 'none';
+
+            entries.forEach((entry, index) => {
+                const prevEntry = entries[index + 1]; // Since entries are sorted newest first, the next one is chronologically older
+                const daysSince = getDaysSinceLast(entry.date, prevEntry ? prevEntry.date : null);
+                
+                const tr = document.createElement('tr');
+                tr.className = "border-b transition-colors hover:bg-slate-50/50 data-[state=selected]:bg-slate-100";
+                
+                tr.innerHTML = `
+                    <td class="p-4 align-middle text-slate-700 font-medium">${formatDate(entry.date)}</td>
+                    <td class="p-4 align-middle text-right text-slate-600">${daysSince}</td>
+                    <td class="p-4 align-middle text-right text-slate-600">${entry.liters.toFixed(1)}</td>
+                    <td class="p-4 align-middle text-right text-slate-600">${entry.kilometers.toFixed(0)}</td>
+                    <td class="p-4 align-middle text-right text-slate-600">₹${entry.cost.toFixed(2)}</td>
+                    <td class="p-4 align-middle text-right text-slate-600">₹${entry.costPerLiter.toFixed(2)}</td>
+                    <td class="p-4 align-middle text-right text-slate-900 font-medium">${entry.fuelEfficiency.toFixed(2)}</td>
+                    <td class="p-4 align-middle text-right text-slate-600">₹${entry.costPerKm.toFixed(2)}</td>
+                `;
+                historyBody.appendChild(tr);
+            });
+        }
+
+        // Handle Log Fill
+        function handleLogFill() {
+            const liters = parseFloat(litersInput.value);
+            const kilometers = parseFloat(kilometersInput.value);
+            const cost = parseFloat(costInput.value);
+
+            // Validation
+            if (!liters || liters <= 0) {
+                alert("Please enter valid liters filled.");
+                return;
+            }
+            if (!kilometers || kilometers < 0) {
+                alert("Please enter valid kilometers.");
+                return;
+            }
+            if (!cost || cost < 0) {
+                alert("Please enter valid cost.");
+                return;
+            }
+
+            // Calculations
+            const costPerLiter = cost / liters;
+            const fuelEfficiency = kilometers / liters;
+            const costPerKm = cost / kilometers;
+
+            // Create Entry
+            const newEntry = {
+                id: Date.now().toString(),
+                date: new Date().toISOString(),
+                liters,
+                kilometers,
+                cost,
+                costPerLiter,
+                fuelEfficiency,
+                costPerKm
+            };
+
+            // Update State (Add to beginning of array)
+            entries.unshift(newEntry);
+
+            // Reset Form
+            litersInput.value = '';
+            kilometersInput.value = '';
+            costInput.value = '';
+            updateCalculations(); // Reset displays
+
+            // Re-render
+            renderHistory();
+        }
+
+        // Event Listeners
+        [litersInput, kilometersInput, costInput].forEach(input => {
+            input.addEventListener('input', updateCalculations);
+        });
+
+        logBtn.addEventListener('click', handleLogFill);
+
+        // Initial render
+        updateCalculations();
+        renderHistory();
+    </script>
+</body>
+</html>
