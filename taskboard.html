@@ -66,9 +66,8 @@
 
         main {
             flex: 1;
-            padding: 1.5rem;
-            overflow-x: hidden;
-            overflow-y: hidden;
+            padding: 1rem;
+            overflow-y: auto;   /* allow vertical scroll */
             display: flex;
             justify-content: center;
         }
@@ -81,10 +80,43 @@
             max-width: 1400px;
         }
 
+        /* MOBILE RESPONSIVE */
+        @media (max-width: 768px) {
+
+            .board {
+                flex-direction: column;   /* stack columns */
+                gap: 1rem;
+            }
+
+            .column {
+                width: 100%;
+                min-height: auto;
+            }
+
+            .task-list {
+                max-height: none;
+            }
+
+            header {
+                padding: 0.75rem 1rem;
+            }
+
+            h1 {
+                font-size: 1rem;
+            }
+
+            .subtitle {
+                font-size: 0.75rem;
+            }
+        }
+
         /* --- COLUMNS --- */
         /* Column specific backgrounds */
         .column {
             flex: 1;
+            display: flex;
+            flex-direction: column;
+            border-radius: var(--radius);
         }
 
         .column[data-column-id="backlog"] {
@@ -116,6 +148,42 @@
             border-bottom: 1px solid rgba(0,0,0,0.05);
         }
 
+        @media (max-width: 768px) {
+
+            .inline-add-form {
+                padding: 0.75rem;
+            }
+
+            .inline-add-form input,
+            .inline-add-form textarea,
+            .inline-add-form select {
+                font-size: 16px; /* prevents iOS zoom */
+            }
+
+            .inline-add-form div[style*="display:flex"] {
+                flex-direction: column !important;
+            }
+
+            .inline-add-form div[style*="gap:10px"] {
+                gap: 8px !important;
+            }
+        }
+
+        /* For Horizontal Scrolling */
+        /* @media (max-width: 768px) {
+
+            .board {
+                flex-direction: row;
+                overflow-x: auto;
+                scroll-snap-type: x mandatory;
+            }
+
+            .column {
+                min-width: 90%;
+                scroll-snap-align: start;
+            }
+        } */
+
         .badge {
             background: rgba(0,0,0,0.1);
             padding: 0.125rem 0.5rem;
@@ -142,45 +210,6 @@
             box-shadow: var(--shadow);
         }
 
-        /* Column-themed inline add forms */
-        .column[data-column-id="backlog"] .inline-add-form {
-            background: #e8edf4;
-            border: 1px solid #cbd5e1;
-        }
-        .column[data-column-id="in-progress"] .inline-add-form {
-            background: #fef3c7;
-            border: 1px solid #fcd34d;
-        }
-        .column[data-column-id="completed"] .inline-add-form {
-            background: #bbf7d0;
-            border: 1px solid #6ee7a0;
-        }
-
-        /* Column-themed Save button */
-        .column[data-column-id="backlog"] .inline-save-btn {
-            background: #475569; color: white; border: none;
-        }
-        .column[data-column-id="backlog"] .inline-save-btn:hover { background: #334155; }
-        .column[data-column-id="in-progress"] .inline-save-btn {
-            background: #d97706; color: white; border: none;
-        }
-        .column[data-column-id="in-progress"] .inline-save-btn:hover { background: #b45309; }
-        .column[data-column-id="completed"] .inline-save-btn {
-            background: #059669; color: white; border: none;
-        }
-        .column[data-column-id="completed"] .inline-save-btn:hover { background: #047857; }
-
-        /* Drop indicator line between cards */
-        .drop-indicator {
-            height: 3px;
-            border-radius: 2px;
-            margin: 2px 0;
-            pointer-events: none;
-        }
-        .column[data-column-id="backlog"] .drop-indicator { background: #64748b; }
-        .column[data-column-id="in-progress"] .drop-indicator { background: #f59e0b; }
-        .column[data-column-id="completed"] .drop-indicator { background: #10b981; }
-
         .due-date {
             display: flex;
             align-items: center;
@@ -201,6 +230,7 @@
             cursor: grab;
             position: relative;
             transition: transform 0.1s, box-shadow 0.1s;
+            touch-action: pan-y;
         }
 
         .task-card:hover {
@@ -634,12 +664,12 @@
                     <div class="api-body">
                         <p class="text-sm">Creates a new task.</p>
                         <pre>{
-  "column": "backlog",
-  "text": "New Task",
-  "description": "...",
-  "date": "2024-01-20",
-  "priority": "P1"
-}</pre>
+                        "column": "backlog",
+                        "text": "New Task",
+                        "description": "...",
+                        "date": "2024-01-20",
+                        "priority": "P1"
+                        }</pre>
                     </div>
                 </div>
 
@@ -651,12 +681,12 @@
                     <div class="api-body">
                         <p class="text-sm">Updates an existing task.</p>
                         <pre>{
-  "column": "in-progress",
-  "text": "Updated Title",
-  "description": "...",
-  "date": "2024-01-25",
-  "priority": "P2"
-}</pre>
+                        "column": "in-progress",
+                        "text": "Updated Title",
+                        "description": "...",
+                        "date": "2024-01-25",
+                        "priority": "P2"
+                        }</pre>
                     </div>
                 </div>
 
@@ -753,6 +783,9 @@
 
         openModal(document.getElementById('view-task-modal'));
     };
+
+    // Add gesture movement for mobile: long-press to open view modal
+    /* --- MOBILE SWIPE MOVE --- */
     
 
     /* --- MOCK API SERVICE --- */
@@ -804,27 +837,13 @@
             return JSON.parse(JSON.stringify(this.data));
         },
 
-        async moveTask(taskId, fromCol, toCol, afterTaskId) {
+        async moveTask(taskId, fromCol, toCol) {
             await this.delay(150);
             const taskIndex = this.data[fromCol].findIndex(t => t.id === taskId);
             if (taskIndex === -1) return this.data;
 
             const [task] = this.data[fromCol].splice(taskIndex, 1);
-
-            if (afterTaskId === null) {
-                // Drop at top
-                this.data[toCol].unshift(task);
-            } else if (afterTaskId === undefined) {
-                // Drop at bottom (no specific position)
-                this.data[toCol].push(task);
-            } else {
-                const afterIndex = this.data[toCol].findIndex(t => t.id === afterTaskId);
-                if (afterIndex === -1) {
-                    this.data[toCol].push(task);
-                } else {
-                    this.data[toCol].splice(afterIndex + 1, 0, task);
-                }
-            }
+            this.data[toCol].push(task);
             return JSON.parse(JSON.stringify(this.data));
         }
     };
@@ -906,7 +925,7 @@
                 </div>
 
                 <div style="display:flex; gap:10px; margin-top:12px;">
-                    <button class="btn inline-save-btn" 
+                    <button class="btn btn-primary" 
                         onclick="saveInlineTask('${columnId}')">
                         Save
                     </button>
@@ -998,7 +1017,6 @@
 
     function handleDragStart(e) {
         const card = e.target.closest('.task-card');
-        if (!card) return;
         draggedTask = {
             id: card.dataset.id,
             fromCol: card.dataset.column
@@ -1009,89 +1027,96 @@
 
     function handleDragEnd(e) {
         const card = e.target.closest('.task-card');
-        if (card) card.classList.remove('dragging');
+        card.classList.remove('dragging');
         document.querySelectorAll('.column').forEach(col => col.classList.remove('drag-over'));
-        removeDropIndicator();
         draggedTask = null;
-    }
-
-    function removeDropIndicator() {
-        document.querySelectorAll('.drop-indicator').forEach(el => el.remove());
-    }
-
-    function getCardBeforePoint(taskList, y) {
-        // Returns the card we are hovering ABOVE (insert before it)
-        const cards = [...taskList.querySelectorAll('.task-card:not(.dragging)')];
-        return cards.reduce((closest, card) => {
-            const box = card.getBoundingClientRect();
-            const offset = y - box.top - box.height / 2;
-            if (offset < 0 && offset > closest.offset) {
-                return { offset, element: card };
-            }
-            return closest;
-        }, { offset: Number.NEGATIVE_INFINITY }).element;
     }
 
     function handleDragOver(e) {
         e.preventDefault();
         const col = e.target.closest('.column');
-        if (!col) return;
-        col.classList.add('drag-over');
-
-        removeDropIndicator();
-        const taskList = col.querySelector('.task-list');
-        if (!taskList) return;
-
-        const beforeCard = getCardBeforePoint(taskList, e.clientY);
-        const indicator = document.createElement('div');
-        indicator.className = 'drop-indicator';
-        if (beforeCard) {
-            taskList.insertBefore(indicator, beforeCard);
-        } else {
-            taskList.appendChild(indicator);
-        }
+        if (col) col.classList.add('drag-over');
     }
 
     function handleDragLeave(e) {
         const col = e.target.closest('.column');
+        // Only remove if we are actually leaving the column element
         if (col && !col.contains(e.relatedTarget)) {
             col.classList.remove('drag-over');
-            removeDropIndicator();
         }
     }
 
     async function handleDrop(e) {
         e.preventDefault();
-        removeDropIndicator();
         const col = e.target.closest('.column');
         if (!col || !draggedTask) return;
 
         const toCol = col.dataset.columnId;
-        const taskList = col.querySelector('.task-list');
+        if (toCol === draggedTask.fromCol) return;
 
-        // Find what card we are dropping BEFORE
-        const beforeCard = getCardBeforePoint(taskList, e.clientY);
-
-        let afterTaskId;
-        if (!beforeCard) {
-            // Dropped at the bottom
-            const allCards = [...taskList.querySelectorAll('.task-card:not(.dragging)')];
-            const lastCard = allCards[allCards.length - 1];
-            afterTaskId = lastCard ? lastCard.dataset.id : undefined;
-        } else {
-            // Dropped before beforeCard — so after the previous card
-            const allCards = [...taskList.querySelectorAll('.task-card:not(.dragging)')];
-            const idx = allCards.indexOf(beforeCard);
-            afterTaskId = idx === 0 ? null : allCards[idx - 1].dataset.id;
-        }
-
-        boardState = await api.moveTask(draggedTask.id, draggedTask.fromCol, toCol, afterTaskId);
+        // API Call
+        boardState = await api.moveTask(draggedTask.id, draggedTask.fromCol, toCol);
         renderBoard();
     }
 
     // Attach Drag Events via Delegation
     boardEl.addEventListener('dragstart', handleDragStart);
     boardEl.addEventListener('dragend', handleDragEnd);
+
+    /* --- MOBILE SWIPE MOVE --- */
+
+    let touchStartX = 0;
+    let touchEndX = 0;
+    let touchTask = null;
+
+    boardEl.addEventListener('touchstart', function (e) {
+        const card = e.target.closest('.task-card');
+        if (!card) return;
+
+        touchTask = {
+            id: card.dataset.id,
+            column: card.dataset.column
+        };
+
+        touchStartX = e.changedTouches[0].screenX;
+    }, { passive: true });
+
+    boardEl.addEventListener('touchend', async function (e) {
+        if (!touchTask) return;
+
+        touchEndX = e.changedTouches[0].screenX;
+        const diff = touchEndX - touchStartX;
+
+        // Minimum swipe distance
+        if (Math.abs(diff) < 60) {
+            touchTask = null;
+            return;
+        }
+
+        const currentIndex = columns.findIndex(c => c.id === touchTask.column);
+        let newColumnIndex = currentIndex;
+
+        if (diff < 0) {
+            // Swipe left → move forward
+            newColumnIndex = Math.min(currentIndex + 1, columns.length - 1);
+        } else {
+            // Swipe right → move backward
+            newColumnIndex = Math.max(currentIndex - 1, 0);
+        }
+
+        const newColumn = columns[newColumnIndex].id;
+
+        if (newColumn !== touchTask.column) {
+            boardState = await api.moveTask(
+                touchTask.id,
+                touchTask.column,
+                newColumn
+            );
+            renderBoard();
+        }
+
+        touchTask = null;
+    });
 
     /* --- MODAL LOGIC --- */
     function openModal(modal) {
@@ -1106,7 +1131,7 @@
     document.getElementById('btn-close-guide-modal').onclick = () => closeModal(guideModal);
     document.getElementById('btn-close-guide-footer').onclick = () => closeModal(guideModal);
 
-    // View Task Modal Close Button
+    // 🔥 View Task Modal Close Button
     document.getElementById('btn-close-view-modal').onclick = () => closeModal(document.getElementById('view-task-modal'));
 
     // Task Modal
@@ -1177,7 +1202,7 @@
         const description = document.getElementById('task-desc').value.trim();
         const date = document.getElementById('task-date').value;
 
-        // Get selected radio priority
+        // ✅ Get selected radio priority
         const priorityRadio = document.querySelector('input[name="priority"]:checked');
         const priority = priorityRadio ? priorityRadio.value : "P3";
 
@@ -1206,6 +1231,7 @@
                 createdAt: new Date().toISOString()
             });
         }
+        console.log({ text, description, date, priority, isBlocked });
 
         closeModal(taskModal);
         renderBoard();
